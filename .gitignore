@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+*.venv
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# VSCode
+.vscode/
+
+# Node.js / Frontend
+node_modules/
+dist/
+.cache/
+*.log
+
+# Astro
+.astro/
+
+# Mac/Windows system files
+.DS_Store
+Thumbs.db
+
+# Docker
+*.pid
+
+# Others
+*.sqlite3
