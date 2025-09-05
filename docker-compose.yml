@@ -7,6 +7,13 @@ services:
       - ./backend:/app
     environment:
       - MONGO_URL=mongodb://mongo:27017
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PASS=${MONGO_PASS}
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_AUTH_DB=${MONGO_AUTH_DB}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRE_MINUTES=${JWT_EXPIRE_MINUTES:-60}
+      - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-7}
     depends_on:
       - mongo
 
@@ -29,6 +36,9 @@ services:
     restart: always
     ports:
       - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=securepass
     volumes:
       - mongo_data:/data/db
 
