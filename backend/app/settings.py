@@ -19,11 +19,33 @@ class Settings(BaseSettings):
     JWT_SECRET: str = Field("change_this_secret", env="JWT_SECRET")
     JWT_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    # Cookie security for refresh token
+    COOKIE_SECURE: bool = False
+    # CORS
+    # Accept either a comma-separated string or a JSON array in the env var
+    ALLOWED_ORIGINS: str | list[str] = Field(
+        "http://localhost:3000", env="ALLOWED_ORIGINS"
+    )
 
     # (no Config class needed with pydantic-settings)
 
 
 settings = Settings()
+
+
+# Parse ALLOWED_ORIGINS into a list[str]
+def _parse_allowed_origins(val: str | list[str] | None) -> list[str]:
+    if val is None:
+        return []
+    if isinstance(val, list):
+        return [str(s) for s in val if str(s).strip()]
+    # string: comma-separated
+    if isinstance(val, str):
+        return [s.strip() for s in val.split(",") if s.strip()]
+    return []
+
+
+ALLOWED_ORIGINS = _parse_allowed_origins(settings.ALLOWED_ORIGINS)
 
 # build mongo url
 if settings.MONGO_USER and settings.MONGO_PASS:

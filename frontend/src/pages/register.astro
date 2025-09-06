@@ -1,0 +1,77 @@
+---
+import BaseLayout from "../layout/BaseLayout.astro";
+import "../styles/global.css";
+
+export const prerender = false;
+---
+
+<BaseLayout title="Register">
+  <body class="p-4">
+    <h1>Register</h1>
+    <form id="register-form">
+      <label>
+        Username
+        <input type="text" name="username" required />
+      </label>
+      <br />
+      <label>
+        Password
+        <input type="password" name="password" required />
+      </label>
+      <br />
+      <button type="submit">Register</button>
+    </form>
+
+    <div id="msg"></div>
+    <script type="module">
+      import { setTokens } from "../public/auth/auth.js";
+      import apiRoutes from "../public/apis/apiRoutes.js";
+
+      const form = document.getElementById("register-form");
+      const msg = document.getElementById("msg");
+      if (form instanceof HTMLFormElement && msg instanceof HTMLElement) {
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const formData = new FormData(form);
+          const body = {
+            username: formData.get("username"),
+            password: formData.get("password"),
+          };
+          try {
+            const res = await fetch(apiRoutes.users.register, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+            });
+            if (!res.ok) throw new Error(await res.text());
+            const data = await res.json();
+            // auto login
+            try {
+              const loginBody = new URLSearchParams();
+              loginBody.append("username", String(body.username));
+              loginBody.append("password", String(body.password));
+              const loginRes = await fetch(apiRoutes.users.token, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                  "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: loginBody,
+              });
+              if (loginRes.ok) {
+                const tokens = await loginRes.json();
+                setTokens(tokens.access_token, null);
+                window.location.replace("/dashboard");
+                return;
+              }
+            } catch {}
+            msg.textContent = `User created: ${data.username}`;
+          } catch (err) {
+            msg.textContent =
+              "Error: " + (err instanceof Error ? err.message : String(err));
+          }
+        });
+      }
+    </script>
+  </body>
+</BaseLayout>

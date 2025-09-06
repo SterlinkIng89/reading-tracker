@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..database.models import UserCreate, UserOut
 from ..services.auth_service import get_password_hash
@@ -19,9 +19,24 @@ async def list_users(
     return users
 
 
-@router.post("", response_model=UserOut)
+@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserCreate, users_col=Depends(get_users_collection)):
+    # prevent duplicate usernames
+    existing = await users_col.find_one({"username": user.username})
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Username already exists"
+        )
+
     pwd = user.password.get_secret_value()
     user_doc = {"username": user.username, "password": get_password_hash(pwd)}
-    result = await users_col.insert_one(user_doc)
+    try:
+        result = await users_col.insert_one(user_doc)
+    except Exception:
+        # Log the exception server-side if you have a logger; return generic message to client
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create user",
+        )
+
     return {"id": str(result.inserted_id), "username": user.username}

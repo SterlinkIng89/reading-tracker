@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from bson import ObjectId
 
@@ -10,6 +11,7 @@ from ..services.auth_service import (
     decode_token,
 )
 from ..database.connection import get_users_collection, get_current_user
+from ..settings import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -35,12 +37,24 @@ async def login(
     await users_col.update_one(
         {"_id": user["_id"]}, {"$set": {"refresh_token": get_password_hash(refresh)}}
     )
-    return {"access_token": access, "refresh_token": refresh, "token_type": "bearer"}
+    # set refresh token in HttpOnly cookie
+    response = JSONResponse(content={"access_token": access, "token_type": "bearer"})
+    response.set_cookie(
+        "refresh_token",
+        refresh,
+        httponly=True,
+        secure=settings.COOKIE_SECURE,
+        samesite="lax",
+        max_age=60 * 60 * 24 * settings.REFRESH_TOKEN_EXPIRE_DAYS,
+        path="/",
+    )
+    return response
 
 
 @router.post("/refresh")
-async def refresh(body: dict, users_col=Depends(get_users_collection)):
-    token = body.get("refresh_token")
+async def refresh(request: Request, users_col=Depends(get_users_collection)):
+    token = request.cookies.get("refresh_token")
+    print("Refresh token:", token)
     if not token:
         raise HTTPException(status_code=400, detail="refresh_token required")
     try:
@@ -67,11 +81,20 @@ async def refresh(body: dict, users_col=Depends(get_users_collection)):
         {"_id": user["_id"]},
         {"$set": {"refresh_token": get_password_hash(new_refresh)}},
     )
-    return {
-        "access_token": new_access,
-        "refresh_token": new_refresh,
-        "token_type": "bearer",
-    }
+    # set new refresh token in cookie
+    response = JSONResponse(
+        content={"access_token": new_access, "token_type": "bearer"}
+    )
+    response.set_cookie(
+        "refresh_token",
+        new_refresh,
+        httponly=True,
+        secure=settings.COOKIE_SECURE,
+        samesite="lax",
+        max_age=60 * 60 * 24 * settings.REFRESH_TOKEN_EXPIRE_DAYS,
+        path="/",
+    )
+    return response
 
 
 @router.post("/logout")
@@ -82,4 +105,6 @@ async def logout(
     await users_col.update_one(
         {"_id": ObjectId(current_user["id"])}, {"$unset": {"refresh_token": ""}}
     )
-    return {"msg": "logged out"}
+    response = JSONResponse(content={"msg": "logged out"})
+    response.delete_cookie("refresh_token", path="/")
+    return response

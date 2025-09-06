@@ -14,6 +14,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRE_MINUTES=${JWT_EXPIRE_MINUTES:-60}
       - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000}
     depends_on:
       - mongo
 
@@ -27,6 +28,7 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=3000
+      - PUBLIC_API_BASE=${PUBLIC_API_BASE:-http://backend:8000}
     command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
     depends_on:
       - backend

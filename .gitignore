@@ -34,3 +34,8 @@ Thumbs.db
 
 # Others
 *.sqlite3
+
+# Cookies and sensitive files
+cookies.txt
+*.cookie
+*.cookies
