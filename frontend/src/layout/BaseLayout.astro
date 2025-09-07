@@ -1,5 +1,7 @@
 ---
 const { title = "Tracker" } = Astro.props;
+import Header from "./components/Header.astro";
+import Footer from "./components/Footer.astro";
 ---
 
 <html lang="en">
@@ -8,112 +10,18 @@ const { title = "Tracker" } = Astro.props;
     <meta name="viewport" content="width=device-width" />
     <title>{title}</title>
   </head>
-  <body class="min-h-screen bg-gray-50 text-gray-900">
-    <!-- Fixed responsive header -->
-    <header class="fixed inset-x-0 top-0 bg-white border-b shadow-sm z-50">
-      <div
-        class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between"
-      >
-        <a href="/" class="text-lg font-semibold text-gray-900"
-          >Reading Tracker</a
-        >
+  <body
+    class="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-900"
+  >
+    <!-- Header Component -->
+    <Header />
 
-        <nav class="hidden sm:flex space-x-4" aria-label="Primary">
-          <a href="/dashboard" class="text-sm text-gray-600 hover:text-gray-900"
-            >Dashboard</a
-          >
-          <a href="/register" class="text-sm text-gray-600 hover:text-gray-900"
-            >Register</a
-          >
-        </nav>
-
-        <div id="header-actions" class="flex items-center gap-4">
-          <slot name="header-actions">
-            <a
-              id="login-link"
-              href="/login"
-              class="text-sm text-indigo-600 hover:underline">Login</a
-            >
-          </slot>
-        </div>
-      </div>
-    </header>
-
-    <script type="module">
-      // Lógica de redirecciones movida al middleware server-side.
-      // Aquí solo ajustamos el header según presencia de access_token.
-      import apiRoutes from "../public/apis/apiRoutes.js";
-
-      const headerActions = document.getElementById("header-actions");
-
-      function clearTokens() {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-      }
-
-      function hasAccess() {
-        const t = localStorage.getItem("access_token");
-        if (!t) return false;
-        try {
-          const parts = t.split(".");
-          if (parts.length !== 3) return false;
-          const payload = JSON.parse(atob(parts[1]));
-          return payload && payload.exp * 1000 > Date.now() + 5000;
-        } catch {
-          return false;
-        }
-      }
-
-      function renderHeader() {
-        if (!headerActions) return;
-        headerActions.innerHTML = "";
-        const logged = hasAccess();
-        if (logged) {
-          const btn = document.createElement("button");
-          btn.textContent = "Logout";
-          btn.className = "text-sm text-gray-700 hover:underline";
-          btn.addEventListener("click", async () => {
-            try {
-              const token = localStorage.getItem("access_token");
-              const headers = token ? { Authorization: `Bearer ${token}` } : {};
-              let res = await fetch(apiRoutes.users.logout, {
-                method: "POST",
-                credentials: "include",
-                headers,
-              });
-              if (!res.ok) {
-                console.debug("logout failed status", res.status);
-                try {
-                  // fallback: try without Authorization to ensure cookie deletion
-                  res = await fetch(apiRoutes.users.logout, {
-                    method: "POST",
-                    credentials: "include",
-                  });
-                } catch (e) {
-                  console.debug("logout fallback failed", e);
-                }
-              }
-            } catch (e) {
-              console.debug("logout request error", e);
-            }
-            clearTokens();
-            window.location.replace("/login");
-          });
-          headerActions.appendChild(btn);
-        } else {
-          const a = document.createElement("a");
-          a.href = "/login";
-          a.className = "text-sm text-indigo-600 hover:underline";
-          a.textContent = "Login";
-          headerActions.appendChild(a);
-        }
-      }
-
-      renderHeader();
-    </script>
-    <!-- give main content top padding equal to header height to avoid overlap -->
-    <main class="pt-16">
+    <!-- Main content -->
+    <main class="pt-14 flex-grow">
       <slot />
     </main>
+
+    <!-- Footer Component -->
+    <Footer />
   </body>
 </html>
