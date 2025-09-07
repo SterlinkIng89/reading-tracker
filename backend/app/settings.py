@@ -27,6 +27,9 @@ class Settings(BaseSettings):
         "http://localhost:3000", env="ALLOWED_ORIGINS"
     )
 
+    # Google Books API
+    GOOGLE_BOOKS_API_KEY: str | None = Field(None, env="GOOGLE_BOOKS_API_KEY")
+
     # (no Config class needed with pydantic-settings)
 
 

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import auth_routes, user_routes
+from .routers import auth_routes, user_routes, books_routes
 
 
 app = FastAPI(title="Reading Tracker API")
@@ -37,3 +37,4 @@ def root():
 
 app.include_router(auth_routes.router)
 app.include_router(user_routes.router)
+app.include_router(books_routes.router)
