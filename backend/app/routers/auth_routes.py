@@ -16,7 +16,7 @@ from ..settings import settings
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/token")
+@router.post("/login")
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     users_col=Depends(get_users_collection),
@@ -38,7 +38,13 @@ async def login(
         {"_id": user["_id"]}, {"$set": {"refresh_token": get_password_hash(refresh)}}
     )
     # set refresh token in HttpOnly cookie
-    response = JSONResponse(content={"access_token": access, "token_type": "bearer"})
+    response = JSONResponse(
+        content={
+            "access_token": access,
+            "token_type": "bearer",
+            "user": {"id": str(user["_id"]), "username": user["username"]},
+        }
+    )
     response.set_cookie(
         "refresh_token",
         refresh,
@@ -83,7 +89,11 @@ async def refresh(request: Request, users_col=Depends(get_users_collection)):
     )
     # set new refresh token in cookie
     response = JSONResponse(
-        content={"access_token": new_access, "token_type": "bearer"}
+        content={
+            "access_token": new_access,
+            "token_type": "bearer",
+            "user": {"id": str(user["_id"]), "username": user["username"]},
+        }
     )
     response.set_cookie(
         "refresh_token",

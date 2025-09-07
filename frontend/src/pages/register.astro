@@ -50,7 +50,7 @@ export const prerender = false;
               const loginBody = new URLSearchParams();
               loginBody.append("username", String(body.username));
               loginBody.append("password", String(body.password));
-              const loginRes = await fetch(apiRoutes.users.token, {
+              const loginRes = await fetch(apiRoutes.users.login, {
                 method: "POST",
                 credentials: "include",
                 headers: {

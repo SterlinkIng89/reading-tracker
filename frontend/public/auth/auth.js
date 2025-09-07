@@ -8,6 +8,13 @@ function getAccess() {
 function getRefresh() {
   return localStorage.getItem("refresh_token");
 }
+function getUserInfo() {
+  return {
+    username: localStorage.getItem("username"),
+    id: localStorage.getItem("user_id"),
+  };
+}
+
 function clearTokens() {
   localStorage.removeItem("access_token");
   localStorage.removeItem("refresh_token");
@@ -83,4 +90,4 @@ export async function authFetch(input, init = {}) {
 }
 
 // Export helpers for pages (login/register) to call
-export { setTokens, clearTokens, getAccess, getRefresh };
+export { setTokens, clearTokens, getAccess, getRefresh, getUserInfo };

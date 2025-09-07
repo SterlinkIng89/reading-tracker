@@ -8,7 +8,7 @@ export const API_BASE = "http://localhost:8000";
 
 const apiRoutes = {
   users: {
-    token: `${API_BASE}/auth/token`,
+    login: `${API_BASE}/auth/login`,
     refresh: `${API_BASE}/auth/refresh`,
     logout: `${API_BASE}/auth/logout`,
     register: `${API_BASE}/users/register`,

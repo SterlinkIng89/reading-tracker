@@ -21,11 +21,10 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     # Cookie security for refresh token
     COOKIE_SECURE: bool = False
+
     # CORS
     # Accept either a comma-separated string or a JSON array in the env var
-    ALLOWED_ORIGINS: str | list[str] = Field(
-        "http://localhost:3000", env="ALLOWED_ORIGINS"
-    )
+    ALLOWED_ORIGINS: str | list[str] = Field("http://localhost:3000")
 
     # Google Books API
     GOOGLE_BOOKS_API_KEY: str | None = Field(None, env="GOOGLE_BOOKS_API_KEY")
