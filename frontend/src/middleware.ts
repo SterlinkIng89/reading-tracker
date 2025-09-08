@@ -1,5 +1,4 @@
 import { defineMiddleware } from "astro:middleware";
-import apiRoutes from "../public/apis/apiRoutes";
 import { decodeJwt } from "jose/jwt/decode";
 
 // Debug variable - change to false in production
@@ -7,7 +6,7 @@ const DEBUG = false;
 
 // Constants
 const BACKEND_URL = "http://backend:8000";
-const PUBLIC_ROUTES = new Set(["/login", "/register"]);
+const PUBLIC_ROUTES = new Set(["/signin"]);
 const COOKIE_OPTIONS = "HttpOnly; Path=/; SameSite=Lax; Secure";
 
 // Helper function for conditional logging
@@ -109,8 +108,8 @@ async function handleRefresh(
     // Refresh failed
     debugLog("❌ Refresh failed - Status:", refreshRes.status);
     if (!isPublic) {
-      debugLog("redirecting to /login because refresh failed");
-      return redirect("/login");
+      debugLog("redirecting to /signin because refresh failed");
+      return redirect("/signin");
     }
     return await next();
   } catch (e) {
@@ -119,8 +118,8 @@ async function handleRefresh(
       e instanceof Error ? e.message : String(e)
     );
     if (!isPublic) {
-      debugLog("redirecting to /login because refresh error");
-      return redirect("/login");
+      debugLog("redirecting to /signin because refresh error");
+      return redirect("/signin");
     }
     return await next();
   }
@@ -129,7 +128,7 @@ async function handleRefresh(
 // Check if path is allowed without auth
 function isAllowedPath(path: string): boolean {
   return (
-    path.startsWith("/auth") ||
+    path.startsWith("/signin") ||
     path.startsWith("/api/auth") ||
     path.startsWith("/favicon") ||
     path.startsWith("/assets") ||
@@ -153,7 +152,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
   debugLog("path=", path, "isPublic=", isPublic, "hasRefresh=", hasRefresh);
 
   // Avoid recursion for refresh endpoint
-  if (hasRefresh && (path === "/auth/refresh" || path === "/auth/refresh/")) {
+  if (
+    hasRefresh &&
+    (path === "/signin/refresh" || path === "/signin/refresh/")
+  ) {
     return await next();
   }
 
@@ -182,10 +184,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // No refresh cookie
   if (!hasRefresh && !isPublic) {
     if (isAllowedPath(path)) {
-      if (path === "/") return redirect("/login");
+      if (path === "/") return redirect("/signin");
       return await next();
     }
-    return redirect("/login");
+    return redirect("/signin");
   }
 
   // Default: continue

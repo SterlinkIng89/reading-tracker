@@ -73,7 +73,7 @@ export async function authFetch(input, init = {}) {
     if (url && url.includes("/auth/refresh")) {
       // avoid infinite loop
       clearTokens();
-      window.location.href = "/login";
+      window.location.href = "/signin";
       throw new Error("refresh-endpoint-401");
     }
 
@@ -84,7 +84,7 @@ export async function authFetch(input, init = {}) {
   } catch (err) {
     // fallo en refresh -> limpiar y redirigir a login
     clearTokens();
-    window.location.href = "/login";
+    window.location.href = "/signin";
     throw err;
   }
 }

@@ -3,7 +3,7 @@
 ---
 
 <header
-  class="fixed inset-x-0 top-0 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-lg z-50"
+  class="fixed inset-x-0 top-0 bg-gray-900/90 backdrop-blur-md border-b border-gray-700 shadow-lg z-50"
 >
   <div
     class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between"
@@ -11,7 +11,7 @@
     <div class="flex items-center space-x-8">
       <a
         href="/"
-        class="flex items-center space-x-2 text-lg font-bold text-indigo-700 hover:text-indigo-800 transition-colors"
+        class="flex items-center space-x-2 text-lg font-bold text-slate-400 hover:text-slate-300 transition-colors"
       >
         <svg
           class="w-6 h-6 flex-shrink-0"
@@ -27,7 +27,7 @@
       <nav class="hidden md:flex space-x-6" aria-label="Primary">
         <a
           href="/dashboard"
-          class="text-base font-medium text-gray-600 hover:text-indigo-600 transition-colors duration-200 leading-tight"
+          class="text-base font-medium text-gray-300 hover:text-slate-400 transition-colors duration-200 leading-tight"
           >Dashboard</a
         >
       </nav>
@@ -36,7 +36,7 @@
     <!-- Mobile menu button -->
     <button
       id="mobile-menu-button"
-      class="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+      class="md:hidden p-2 rounded-md text-gray-300 hover:text-gray-100 hover:bg-gray-800 transition-colors"
     >
       <svg
         class="w-6 h-6"
@@ -55,10 +55,10 @@
     <div id="header-actions" class="hidden md:flex items-center gap-6">
       <slot name="header-actions">
         <a
-          id="login-link"
-          href="/login"
-          class="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
-          >Login</a
+          id="signin-link"
+          href="/signin"
+          class="text-sm font-medium text-slate-400 hover:text-slate-300 transition-colors"
+          >Sign in</a
         >
       </slot>
     </div>
@@ -67,15 +67,15 @@
   <!-- Mobile menu -->
   <div
     id="mobile-menu"
-    class="md:hidden hidden bg-white border-t border-gray-200"
+    class="md:hidden hidden bg-gray-900 border-t border-gray-700"
   >
     <div class="px-4 py-3 space-y-3">
       <a
         href="/dashboard"
-        class="block text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors"
+        class="block text-sm font-medium text-gray-300 hover:text-slate-400 transition-colors"
         >Dashboard</a
       >
-      <div id="mobile-actions" class="pt-2 border-t border-gray-200">
+      <div id="mobile-actions" class="pt-2 border-t border-gray-700">
         <!-- Mobile actions will be populated by JS -->
       </div>
     </div>
@@ -122,13 +122,13 @@
       const username = payload.username;
       const userSpan = document.createElement("span");
       userSpan.textContent = `Hola, ${username}`;
-      userSpan.className = "text-sm font-medium text-gray-700";
+      userSpan.className = "text-sm font-medium text-gray-300";
       headerActions.appendChild(userSpan);
 
       const btn = document.createElement("button");
-      btn.textContent = "Logout";
+      btn.textContent = "Sing out";
       btn.className =
-        "text-sm font-medium text-red-600 hover:text-red-800 transition-colors";
+        "text-sm font-medium text-red-400 hover:text-red-300 transition-colors";
       btn.addEventListener("click", async () => {
         try {
           const token = localStorage.getItem("access_token");
@@ -139,7 +139,7 @@
             headers,
           });
           if (!res.ok) {
-            console.debug("logout failed status", res.status);
+            console.debug("Sign out failed status", res.status);
             try {
               // fallback: try without Authorization to ensure cookie deletion
               res = await fetch(apiRoutes.users.logout, {
@@ -147,27 +147,27 @@
                 credentials: "include",
               });
             } catch (e) {
-              console.debug("logout fallback failed", e);
+              console.debug("Sign out fallback failed", e);
             }
           }
         } catch (e) {
-          console.debug("logout request error", e);
+          console.debug("Sign out request error", e);
         }
         clearTokens();
-        window.location.replace("/login");
+        window.location.replace("/signin");
       });
       headerActions.appendChild(btn);
 
       // Mobile version
       const mobileUserSpan = document.createElement("span");
       mobileUserSpan.textContent = `Hola, ${username}`;
-      mobileUserSpan.className = "text-sm font-medium text-gray-700 block";
+      mobileUserSpan.className = "text-sm font-medium text-gray-300 block";
       mobileActions.appendChild(mobileUserSpan);
 
       const mobileBtn = document.createElement("button");
-      mobileBtn.textContent = "Logout";
+      mobileBtn.textContent = "Sign out";
       mobileBtn.className =
-        "text-sm font-medium text-red-600 hover:text-red-800 transition-colors block mt-2";
+        "text-sm font-medium text-red-400 hover:text-red-300 transition-colors block mt-2";
       mobileBtn.addEventListener("click", async () => {
         // Same logout logic
         await btn.click();
@@ -175,18 +175,18 @@
       mobileActions.appendChild(mobileBtn);
     } else {
       const a = document.createElement("a");
-      a.href = "/login";
+      a.href = "/signin";
       a.className =
-        "text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors";
-      a.textContent = "Login";
+        "text-sm font-medium text-slate-400 hover:text-slate-300 transition-colors";
+      a.textContent = "Sign in";
       headerActions.appendChild(a);
 
       // Mobile version
       const mobileA = document.createElement("a");
-      mobileA.href = "/login";
+      mobileA.href = "/signin";
       mobileA.className =
-        "text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors block";
-      mobileA.textContent = "Login";
+        "text-sm font-medium text-slate-400 hover:text-slate-300 transition-colors block";
+      mobileA.textContent = "Sign in";
       mobileActions.appendChild(mobileA);
     }
   }

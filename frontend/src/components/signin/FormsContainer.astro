@@ -1,0 +1,351 @@
+---
+import SignInForm from "./SignInForm.astro";
+import SignUpForm from "./SignUpForm.astro";
+import AuthMessages from "./AuthMessages.astro";
+---
+
+<!-- Forms Container -->
+<div class="relative">
+  <div
+    class="flex transition-transform duration-500 ease-in-out"
+    id="forms-container"
+  >
+    <!-- Login Form Container -->
+    <div class="w-full flex-shrink-0 px-8 py-6" id="login-form-container">
+      <SignInForm />
+    </div>
+
+    <!-- Register Form Container -->
+    <div class="w-full flex-shrink-0 px-8 py-6" id="register-form-container">
+      <SignUpForm />
+    </div>
+  </div>
+
+  <AuthMessages />
+</div>
+
+<script>
+  // Initialize variables for imports
+  let setTokens: any = null;
+  let apiRoutes: any = null;
+
+  // Load dependencies and initialize functionality
+  (async () => {
+    try {
+      const authModule = await import("../../../public/auth/auth.js");
+      const apiModule = await import("../../../public/apis/apiRoutes.js");
+      const setTokens = authModule.setTokens;
+      const apiRoutes = apiModule.default;
+
+      // Now initialize all the event listeners and functionality
+      initializeFormFunctionality(setTokens, apiRoutes);
+    } catch (error) {
+      console.error("Failed to load dependencies:", error);
+    }
+  })();
+
+  function initializeFormFunctionality(setTokens: any, apiRoutes: any) {
+    // DOM Elements
+    const formsContainer = document.getElementById("forms-container");
+    const authTitle = document.getElementById("auth-title");
+    const authSubtitle = document.getElementById("auth-subtitle");
+    const showRegisterBtn = document.getElementById("show-register");
+    const showLoginBtn = document.getElementById("show-login");
+
+    // Login elements
+    const loginForm = document.getElementById(
+      "login-form"
+    ) as HTMLFormElement | null;
+    const loginBtn = document.getElementById(
+      "login-btn"
+    ) as HTMLButtonElement | null;
+    const toggleLoginPassword = document.getElementById(
+      "toggle-login-password"
+    );
+    const loginPasswordInput = document.querySelector(
+      '#login-form input[name="password"]'
+    ) as HTMLInputElement | null;
+    const loginErrorMsg = document.getElementById("login-error-msg");
+    const loginErrorText = document.getElementById("login-error-text");
+
+    // Register elements
+    const registerForm = document.getElementById(
+      "register-form"
+    ) as HTMLFormElement | null;
+    const registerBtn = document.getElementById(
+      "register-btn"
+    ) as HTMLButtonElement | null;
+    const toggleRegisterPassword = document.getElementById(
+      "toggle-register-password"
+    );
+    const registerPasswordInput = document.querySelector(
+      '#register-form input[name="password"]'
+    ) as HTMLInputElement | null;
+    const registerSuccessMsg = document.getElementById("register-success-msg");
+    const registerSuccessText = document.getElementById(
+      "register-success-text"
+    );
+    const registerErrorMsg = document.getElementById("register-error-msg");
+    const registerErrorText = document.getElementById("register-error-text");
+
+    let currentForm = "login"; // Track current visible form
+
+    // Form switching functions
+    function showRegister() {
+      if (
+        currentForm === "login" &&
+        formsContainer &&
+        authTitle &&
+        authSubtitle
+      ) {
+        formsContainer.style.transform = "translateX(-100%)";
+        authTitle.textContent = "Join Reading Tracker";
+        authSubtitle.textContent =
+          "Create your account and start tracking your reading journey";
+        currentForm = "register";
+
+        // Clear login messages
+        if (loginErrorMsg) {
+          loginErrorMsg.classList.add("hidden");
+          if (loginErrorText) loginErrorText.textContent = "";
+        }
+      }
+    }
+
+    function showLogin() {
+      if (
+        currentForm === "register" &&
+        formsContainer &&
+        authTitle &&
+        authSubtitle
+      ) {
+        formsContainer.style.transform = "translateX(0%)";
+        authTitle.textContent = "Welcome Back";
+        authSubtitle.textContent = "Sign in to continue your reading journey";
+        currentForm = "login";
+
+        // Clear register messages
+        if (registerSuccessMsg) registerSuccessMsg.classList.add("hidden");
+        if (registerErrorMsg) registerErrorMsg.classList.add("hidden");
+
+        if (registerSuccessText) registerSuccessText.textContent = "";
+        if (registerErrorText) registerErrorText.textContent = "";
+      }
+    }
+
+    // Event listeners for form switching
+    if (showRegisterBtn) {
+      showRegisterBtn.addEventListener("click", showRegister);
+    }
+
+    if (showLoginBtn) {
+      showLoginBtn.addEventListener("click", showLogin);
+    }
+
+    // Password visibility toggles
+    if (toggleLoginPassword && loginPasswordInput) {
+      toggleLoginPassword.addEventListener("click", () => {
+        const type =
+          loginPasswordInput.type === "password" ? "text" : "password";
+        loginPasswordInput.type = type;
+
+        const eyeIcon = document.getElementById("login-eye-icon");
+        if (eyeIcon) {
+          eyeIcon.innerHTML =
+            type === "password"
+              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>'
+              : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>';
+        }
+      });
+    }
+
+    if (toggleRegisterPassword && registerPasswordInput) {
+      toggleRegisterPassword.addEventListener("click", () => {
+        const type =
+          registerPasswordInput.type === "password" ? "text" : "password";
+        registerPasswordInput.type = type;
+
+        const eyeIcon = document.getElementById("register-eye-icon");
+        if (eyeIcon) {
+          eyeIcon.innerHTML =
+            type === "password"
+              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>'
+              : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>';
+        }
+      });
+    }
+
+    // Login form submission
+    if (loginForm instanceof HTMLFormElement && loginBtn && loginErrorMsg) {
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        // Clear previous messages
+        loginErrorMsg.classList.add("hidden");
+        if (loginErrorText) loginErrorText.textContent = "";
+
+        // Show loading state
+        if (loginBtn) {
+          loginBtn.disabled = true;
+          loginBtn.innerHTML = `
+          <svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Signing In...
+        `;
+        }
+
+        const formData = new FormData(loginForm);
+        const username = formData.get("username");
+        const password = formData.get("password");
+        const body = new URLSearchParams();
+
+        if (typeof username === "string") body.append("username", username);
+        if (typeof password === "string") body.append("password", password);
+
+        try {
+          const res = await fetch(apiRoutes.users.login, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body,
+          });
+
+          if (!res.ok) throw new Error((await res.text()) || res.statusText);
+
+          const data = await res.json();
+          setTokens(data.access_token, null);
+          window.location.replace("/dashboard");
+        } catch (err) {
+          // Show error message
+          loginErrorMsg.classList.remove("hidden");
+          if (loginErrorText) {
+            loginErrorText.textContent =
+              err instanceof Error ? err.message : String(err);
+          }
+
+          // Reset button
+          if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = `
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+            </svg>
+            Sign In
+          `;
+          }
+        } finally {
+          // Ensure button is re-enabled
+          if (loginBtn) loginBtn.disabled = false;
+        }
+      });
+    }
+
+    // Register form submission
+    if (
+      registerForm instanceof HTMLFormElement &&
+      registerBtn &&
+      registerSuccessMsg &&
+      registerErrorMsg
+    ) {
+      registerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        // Clear previous messages
+        registerSuccessMsg.classList.add("hidden");
+        registerErrorMsg.classList.add("hidden");
+        if (registerSuccessText) registerSuccessText.textContent = "";
+        if (registerErrorText) registerErrorText.textContent = "";
+
+        // Show loading state
+        if (registerBtn) {
+          registerBtn.disabled = true;
+          registerBtn.innerHTML = `
+          <svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Creating Account...
+        `;
+        }
+
+        const formData = new FormData(registerForm);
+        const body = {
+          username: formData.get("username"),
+          password: formData.get("password"),
+        };
+
+        try {
+          // Register user
+          const res = await fetch(apiRoutes.users.register, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+
+          if (!res.ok) throw new Error(await res.text());
+          const data = await res.json();
+
+          // Auto login after successful registration
+          try {
+            const loginBody = new URLSearchParams();
+            loginBody.append("username", String(body.username));
+            loginBody.append("password", String(body.password));
+
+            const loginRes = await fetch(apiRoutes.users.login, {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: loginBody,
+            });
+
+            if (loginRes.ok) {
+              const tokens = await loginRes.json();
+              setTokens(tokens.access_token, null);
+              window.location.replace("/dashboard");
+              return;
+            }
+          } catch (loginError) {
+            console.warn("Auto-login failed:", loginError);
+          }
+
+          // Show success message if auto-login fails
+          registerSuccessMsg.classList.remove("hidden");
+          if (registerSuccessText) {
+            registerSuccessText.textContent = `Account created successfully! Welcome ${data.username}`;
+          }
+
+          // Reset button
+          if (registerBtn) {
+            registerBtn.disabled = false;
+            registerBtn.innerHTML = `
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+            </svg>
+            Create Account
+          `;
+          }
+        } catch (err) {
+          // Show error message
+          registerErrorMsg.classList.remove("hidden");
+          if (registerErrorText) {
+            registerErrorText.textContent =
+              err instanceof Error ? err.message : String(err);
+          }
+
+          // Reset button
+          if (registerBtn) {
+            registerBtn.disabled = false;
+            registerBtn.innerHTML = `
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+            </svg>
+            Create Account
+          `;
+          }
+        }
+      });
+    }
+  }
+</script>
