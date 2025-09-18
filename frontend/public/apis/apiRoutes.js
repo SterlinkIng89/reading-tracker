@@ -15,9 +15,9 @@ const apiRoutes = {
     me: `${API_BASE}/users/me`,
   },
   books: {
-    list: `${API_BASE}/books`,
-    create: `${API_BASE}/books`,
-    byId: (id) => `${API_BASE}/books/${id}`,
+    search: `${API_BASE}/books/search`,
+    add: `${API_BASE}/books/user/add`,
+    library: `${API_BASE}/books/user/library`,
   },
 };
 

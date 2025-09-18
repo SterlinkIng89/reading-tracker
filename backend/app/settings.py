@@ -55,6 +55,7 @@ if settings.MONGO_USER and settings.MONGO_PASS:
 else:
     MONGO_URL = settings.MONGO_URL or f"mongodb://{settings.MONGO_HOST}"
 
+
 _client = AsyncIOMotorClient(MONGO_URL)
 
 
