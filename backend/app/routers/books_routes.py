@@ -120,7 +120,7 @@ async def search_books(
     return {"totalItems": data.get("totalItems", 0), "books": books, "query": query}
 
 
-@router.post("/user/add")
+@router.post("/user/library/add")
 async def add_book_to_user(
     book_data: dict = Body(...),
     books_col=Depends(get_books_collection),
@@ -178,6 +178,42 @@ async def add_book_to_user(
         raise HTTPException(status_code=500, detail=f"Error adding book: {str(e)}")
 
 
+@router.post("/user/library/remove")
+async def remove_book_from_user(
+    payload: dict = Body(...),
+    user_books_col=Depends(get_user_books_collection),
+    current_user: dict = Depends(get_current_user),
+):
+    try:
+        book_id = None
+        if isinstance(payload, dict):
+            book_id = payload.get("book_id")
+        else:
+            book_id = str(payload)
+
+        print(book_id)
+        print(current_user["id"])
+        find = await user_books_col.find(
+            {
+                "user_id": ObjectId(current_user["id"]),
+                "book_id": str(book_id),
+            }
+        ).to_list(None)
+
+        print(find)
+
+        await user_books_col.delete_one(
+            {
+                "user_id": ObjectId(current_user["id"]),
+                "book_id": book_id,
+            }
+        )
+        print("Book Removed from Library")
+        return {"message": "Book removed from library"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error removing book: {str(e)}")
+
+
 @router.get("/user/library")
 async def get_user_library(
     books_col=Depends(get_books_collection),
@@ -219,9 +255,8 @@ async def get_user_library(
         raise HTTPException(status_code=500, detail=f"Error fetching library: {str(e)}")
 
 
-@router.post("/user/{book_id}/log")
+@router.post("/user/log")
 async def log_reading(
-    book_id: str,
     log_data: dict = Body(...),
     user_books_col=Depends(get_user_books_collection),
     reading_logs_col=Depends(get_reading_logs_collection),
@@ -231,13 +266,16 @@ async def log_reading(
     try:
         # Check if this is the first log for this book
         existing_logs = await reading_logs_col.count_documents(
-            {"user_id": ObjectId(current_user["_id"]), "book_id": book_id}
+            {
+                "user_id": ObjectId(current_user["_id"]),
+                "book_id": ObjectId(log_data["book_id"]),
+            },
         )
 
         # Create log entry
         log_doc = {
             "user_id": ObjectId(current_user["_id"]),
-            "book_id": book_id,
+            "book_id": ObjectId(log_data["book_id"]),
             "reading_date": datetime.combine(
                 date.today(), datetime.min.time()
             ),  # Date only
@@ -262,7 +300,7 @@ async def log_reading(
             )
 
         await user_books_col.update_one(
-            {"user_id": ObjectId(current_user["_id"]), "book_id": book_id},
+            {"user_id": ObjectId(current_user["_id"]), "book_id": log_data["book_id"]},
             {"$set": update_data},
         )
 

@@ -8,8 +8,6 @@ oauth2 = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 
 async def get_current_user(token: str = Depends(oauth2)):
-    print("ASDASDASDASDAS")
-    print("token", token)
     try:
         payload = decode_token(token)
         uid = payload.get("sub")

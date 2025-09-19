@@ -1,0 +1,127 @@
+import React, { useState } from "react";
+import BookEditModal from "./modals/BookEditModal";
+
+interface Book {
+  _id?: string;
+  book_id?: string;
+  title?: string;
+  authors?: string[];
+  thumbnail?: string;
+  total_pages?: number;
+  totalPages?: number;
+  current_page?: number;
+  last_read_date?: string | null;
+  status?: "reading" | "completed" | "abandoned";
+  [k: string]: any;
+}
+
+interface BookCardProps {
+  book?: Book;
+  isNewBook?: boolean;
+  onAdd?: () => void;
+}
+
+const BookCard: React.FC<BookCardProps> = ({
+  book,
+  isNewBook = false,
+  onAdd,
+}) => {
+  // derive fields from book object (backwards-compatible if undefined)
+  const title = book?.title ?? "Unknown Book";
+  const author = (book?.authors && book.authors[0]) || "Unknown Author";
+  const coverUrl = book?.thumbnail;
+  const status = (book?.status as any) ?? "reading";
+  const totalPages = book?.total_pages ?? book?.totalPages ?? 0;
+  const currentPage = book?.current_page ?? book?.currentPage ?? 0;
+  const lastReadDate = book?.last_read_date ?? book?.lastReadDate ?? undefined;
+  const bookId = book?._id ?? book?.book_id;
+
+  const progressPercent =
+    totalPages > 0 ? Math.min((currentPage / totalPages) * 100, 100) : 0;
+
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const handleOpenAdd = () => {
+    if (onAdd) return onAdd();
+  };
+
+  const openEdit = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setIsEditOpen(true);
+  };
+  const closeEdit = () => setIsEditOpen(false);
+
+  return (
+    <div
+      {...(bookId ? { "data-book-id": bookId } : {})}
+      className={`book-card flex flex-col w-[150px] h-[230px] overflow-visible rounded-md shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer ${
+        isEditOpen ? "scale-105" : ""
+      }`}
+    >
+      {isNewBook ? (
+        <button
+          className="relative bg-gray-700 flex items-center justify-center w-full flex-1 rounded-md"
+          onClick={handleOpenAdd}
+        >
+          <div
+            aria-label="Add new book"
+            className="flex flex-col items-center justify-center w-full h-full focus:outline-none"
+          >
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-600 hover:bg-slate-500 transition-colors">
+              <svg
+                className="w-10 h-10 text-[#E0E0E0]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+            </div>
+            <p className="mt-3 text-sm font-medium text-[#E0E0E0]">Add book</p>
+          </div>
+        </button>
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={openEdit}
+            className="relative w-full flex-1 focus:outline-none"
+            aria-label={`Open actions for ${title}`}
+          >
+            {coverUrl ? (
+              <div className="w-full h-full rounded-md overflow-hidden">
+                <img
+                  src={coverUrl}
+                  alt={`Cover of ${title}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-full h-full rounded-t-lg bg-gray-700 flex items-center justify-center overflow-hidden">
+                <div className="text-center text-[#a8a8a9]">
+                  <div className="w-16 h-16 mx-auto mb-2 bg-gray-600 rounded" />
+                  <p className="text-sm">No cover</p>
+                </div>
+              </div>
+            )}
+
+            <div className="absolute left-1/2 transform -translate-x-1/2 -bottom-4">
+              <div className="rounded-md px-3 py-1 text-sm font-semibold text-[#E0E0E0] shadow-lg border border-gray-700 bg-[rgba(17,24,39,0.6)] backdrop-blur-sm">
+                {Math.round(progressPercent)}%
+              </div>
+            </div>
+          </button>
+
+          <BookEditModal open={isEditOpen} onClose={closeEdit} book={book} />
+        </>
+      )}
+    </div>
+  );
+};
+
+export default BookCard;

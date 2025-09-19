@@ -2,18 +2,18 @@ FROM node:lts
 
 WORKDIR /app
 
-# copiar solo package.json (y package-lock.json si existe) para cachear instalación
+# copy package files first to leverage docker cache
 COPY package*.json ./
 
-# si existe package-lock.json usa npm ci, si no usa npm install
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+# Use npm ci when lockfile exists for reproducible installs
+RUN if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
 
-# copiar el resto (para cuando no montes volumen)
+# copy rest of the source
 COPY . .
 
 ENV HOST=0.0.0.0
 ENV PORT=3000
 EXPOSE 3000
 
-# ejecutar el servidor de desarrollo al iniciar el contenedor
-CMD ["npm", "run", "dev"]
+# Start dev server
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]

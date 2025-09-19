@@ -60,7 +60,6 @@ async def login(
 @router.post("/refresh")
 async def refresh(request: Request, users_col=Depends(get_users_collection)):
     token = request.cookies.get("refresh_token")
-    print("Refresh token:", token)
     if not token:
         raise HTTPException(status_code=400, detail="refresh_token required")
     try:

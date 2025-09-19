@@ -1,7 +1,6 @@
 ---
 import BaseLayout from "../layout/BaseLayout.astro";
 import RecentBooks from "../components/dashboard/RecentBooks.astro";
-import ReadingLogger from "../components/dashboard/ReadingLogger.astro";
 export const prerender = false;
 ---
 
@@ -14,8 +13,5 @@ export const prerender = false;
 
     <!-- Recent Books -->
     <RecentBooks />
-
-    <!-- Reading Logger Modal (hidden by default) -->
-    <ReadingLogger />
   </div>
 </BaseLayout>
