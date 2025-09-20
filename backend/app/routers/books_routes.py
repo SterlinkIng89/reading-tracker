@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, Query, Depends, Body
 
 from bson import ObjectId
-from datetime import datetime, date
+from datetime import datetime, date, timezone
+import logging
 
 import httpx
 from app.settings import settings
@@ -11,13 +12,14 @@ from ..database.connection import (
     get_user_books_collection,
     get_reading_logs_collection,
 )
-from ..database.models.book_models import Book
+from ..database.models.book_models import Book, ReadingLogCreate
 
 router = APIRouter(prefix="/books", tags=["books"])
 
 GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes"
 
 
+# Search for books using google api
 @router.get("/search")
 async def search_books(
     query: str = Query(..., description="Search query for books"),
@@ -120,6 +122,7 @@ async def search_books(
     return {"totalItems": data.get("totalItems", 0), "books": books, "query": query}
 
 
+# Add book to user's library
 @router.post("/user/library/add")
 async def add_book_to_user(
     book_data: dict = Body(...),
@@ -164,8 +167,8 @@ async def add_book_to_user(
             "status": "reading",
             "start_date": None,  # Will be set when first log is added
             "last_read_date": None,
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
         }
 
         print("inserting book doc", book_doc)
@@ -178,6 +181,7 @@ async def add_book_to_user(
         raise HTTPException(status_code=500, detail=f"Error adding book: {str(e)}")
 
 
+# Remove book from user's library
 @router.post("/user/library/remove")
 async def remove_book_from_user(
     payload: dict = Body(...),
@@ -214,104 +218,371 @@ async def remove_book_from_user(
         raise HTTPException(status_code=500, detail=f"Error removing book: {str(e)}")
 
 
+# Get user's book library
 @router.get("/user/library")
-async def get_user_library(
+async def get_user_library_summary(
     books_col=Depends(get_books_collection),
     user_books_col=Depends(get_user_books_collection),
     current_user: dict = Depends(get_current_user),
 ):
-    """Get user's book library"""
+    """Get user's book library summary (optimized for list view)"""
     try:
-        # Get user's books
+        # Get user's books with basic info only
         user_books = await user_books_col.find(
             {"user_id": ObjectId(current_user["id"])}
         ).to_list(None)
 
-        # Get book details for each user book
+        # Get book details for each user book (only essential fields)
         books = []
         for user_book in user_books:
-            book = await books_col.find_one({"google_id": user_book["book_id"]})
+            book = await books_col.find_one(
+                {"google_id": user_book["book_id"]},
+                {"title": 1, "authors": 1, "thumbnail": 1, "page_count": 1},
+            )
             if book:
-                # Combine user book data with book details
+                # Calculate progress percentage
+                total_pages = book.get("page_count", 0) or 0
+                current_page = user_book.get("current_page", 0) or 0
+                progress_percentage = (
+                    (current_page / total_pages * 100) if total_pages > 0 else 0
+                )
+
+                # Return only essential data for list view
                 combined = {
                     "_id": str(user_book["_id"]),
-                    "user_id": str(user_book["user_id"]),
                     "book_id": user_book["book_id"],
-                    "title": book["title"],
-                    "authors": book["authors"],
-                    "thumbnail": book["thumbnail"],
-                    "total_pages": book["page_count"],
-                    "current_page": user_book["current_page"],
-                    "status": user_book["status"],
-                    "start_date": user_book["start_date"],
-                    "last_read_date": user_book["last_read_date"],
-                    "created_at": user_book["created_at"],
-                    "updated_at": user_book["updated_at"],
+                    "title": book.get("title", "Unknown Title"),
+                    "thumbnail": book.get("thumbnail"),
+                    "total_pages": total_pages,
+                    "current_page": current_page,
+                    "progress_percentage": round(progress_percentage, 1),
+                    "last_read_date": user_book.get("last_read_date"),
                 }
                 books.append(combined)
 
         return {"books": books}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching library: {str(e)}")
+        logging.error(f"Error fetching library summary: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching library summary: {str(e)}"
+        )
 
 
-@router.post("/user/log")
-async def log_reading(
-    log_data: dict = Body(...),
+# Get specific book details from user's library
+@router.get("/user/library/book")
+async def get_user_library_book(
+    book_id: str = Query(..., description="Book ID to fetch details for"),
+    books_col=Depends(get_books_collection),
+    user_books_col=Depends(get_user_books_collection),
+    current_user: dict = Depends(get_current_user),
+):
+    """Get specific book details from user's library"""
+    try:
+        # Get user's book
+        user_book = await user_books_col.find_one(
+            {"user_id": ObjectId(current_user["id"]), "book_id": book_id}
+        )
+
+        if not user_book:
+            raise HTTPException(
+                status_code=404, detail="Book not found in user's library"
+            )
+
+        # Get book details
+        book = await books_col.find_one({"google_id": book_id})
+        if not book:
+            raise HTTPException(status_code=404, detail="Book details not found")
+
+        # Combine user book data with book details
+        combined = {
+            "_id": str(user_book["_id"]),
+            "user_id": str(user_book["user_id"]),
+            "book_id": user_book["book_id"],
+            "title": book["title"],
+            "authors": book["authors"],
+            "published_date": book.get("published_date", ""),
+            "publisher": book.get("publisher", ""),
+            "description": book.get("description", ""),
+            "thumbnail": book["thumbnail"],
+            "total_pages": book["page_count"],
+            "categories": book.get("categories", []),
+            "info_link": book.get("info_link", ""),
+            "isbn": book.get("isbn", ""),
+            "current_page": user_book["current_page"],
+            "status": user_book["status"],
+            "start_date": user_book["start_date"],
+            "last_read_date": user_book["last_read_date"],
+            "created_at": user_book["created_at"],
+            "updated_at": user_book["updated_at"],
+        }
+
+        return combined
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error fetching book details: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching book details: {str(e)}"
+        )
+
+
+# Log reading of a book
+@router.post("/user/log/add")
+async def add_log_reading(
+    log_data: ReadingLogCreate,
     user_books_col=Depends(get_user_books_collection),
     reading_logs_col=Depends(get_reading_logs_collection),
     current_user: dict = Depends(get_current_user),
 ):
     """Log reading progress for a book"""
     try:
-        # Check if this is the first log for this book
-        existing_logs = await reading_logs_col.count_documents(
+        # Parse and validate reading date
+        reading_date = date.today()
+        if log_data.reading_date:
+            try:
+                reading_date = datetime.fromisoformat(log_data.reading_date).date()
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid reading_date format. Use ISO format (YYYY-MM-DD)",
+                )
+
+        user_id = ObjectId(current_user["id"])
+        book_id = log_data.book_id
+
+        # Check if user has this book in their library
+        user_book = await user_books_col.find_one(
+            {"user_id": user_id, "book_id": book_id}
+        )
+        if not user_book:
+            raise HTTPException(
+                status_code=404, detail="Book not found in user's library"
+            )
+
+        # Validate current_page is not less than existing current_page
+        if log_data.current_page < user_book.get("current_page", 0):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Current page ({log_data.current_page}) cannot be less than existing progress ({user_book.get('current_page', 0)})",
+            )
+
+        reading_datetime = datetime.combine(reading_date, datetime.min.time())
+
+        # Check if log already exists for this date
+        existing_log = await reading_logs_col.find_one(
             {
-                "user_id": ObjectId(current_user["_id"]),
-                "book_id": ObjectId(log_data["book_id"]),
-            },
+                "user_id": user_id,
+                "book_id": book_id,
+                "reading_date": reading_datetime,
+            }
         )
 
-        # Create log entry
-        log_doc = {
-            "user_id": ObjectId(current_user["_id"]),
-            "book_id": ObjectId(log_data["book_id"]),
-            "reading_date": datetime.combine(
-                date.today(), datetime.min.time()
-            ),  # Date only
-            "pages_read": log_data["pages_read"],
-            "notes": log_data.get("notes", ""),
-            "created_at": datetime.now(datetime.timezone.utc),
-        }
-
-        await reading_logs_col.insert_one(log_doc)
+        if existing_log:
+            # Update existing log: increment pages_read and update current_page
+            await reading_logs_col.update_one(
+                {"_id": existing_log["_id"]},
+                {
+                    "$inc": {"pages_read": log_data.pages_read},
+                    "$set": {
+                        "current_page": log_data.current_page,
+                        "notes": log_data.notes or existing_log.get("notes", ""),
+                        "updated_at": datetime.now(timezone.utc),
+                    },
+                },
+            )
+            logging.info(
+                f"Updated existing reading log for book {book_id} on {reading_date}"
+            )
+        else:
+            # Create new log entry
+            log_doc = {
+                "user_id": user_id,
+                "book_id": book_id,
+                "reading_date": reading_datetime,
+                "pages_read": log_data.pages_read,
+                "current_page": log_data.current_page,
+                "notes": log_data.notes or "",
+                "created_at": datetime.now(timezone.utc),
+            }
+            await reading_logs_col.insert_one(log_doc)
+            logging.info(
+                f"Created new reading log for book {book_id} on {reading_date}"
+            )
 
         # Update user's book progress
         update_data = {
-            "current_page": log_data.get("current_page", 0),
-            "last_read_date": datetime.now(datetime.timezone.utc),
-            "updated_at": datetime.now(datetime.timezone.utc),
+            "current_page": log_data.current_page,
+            "last_read_date": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
         }
 
-        # If this is the first log, set start_date
-        if existing_logs == 0:
-            update_data["start_date"] = datetime.combine(
-                date.today(), datetime.min.time()
-            )
+        # If this is the first log ever for this book, set start_date
+        total_logs = await reading_logs_col.count_documents(
+            {
+                "user_id": user_id,
+                "book_id": book_id,
+            }
+        )
+
+        if total_logs == 0:
+            update_data["start_date"] = reading_datetime
 
         await user_books_col.update_one(
-            {"user_id": ObjectId(current_user["_id"]), "book_id": log_data["book_id"]},
+            {"user_id": user_id, "book_id": book_id},
             {"$set": update_data},
         )
 
         return {"message": "Reading logged successfully"}
+
+    except HTTPException:
+        raise
     except Exception as e:
+        logging.error(f"Error logging reading: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error logging reading: {str(e)}")
 
 
-@router.get("/user/{book_id}/logs")
-async def get_book_logs(
-    book_id: str,
+# Modify reading log
+@router.post("/user/log/modify")
+async def modify_log_reading(
+    log_data: dict,
+    reading_logs_col=Depends(get_reading_logs_collection),
+    user_books_col=Depends(get_user_books_collection),
+    current_user: dict = Depends(get_current_user),
+):
+    """Modify an existing reading log"""
+    try:
+        # Parse dates
+        original_date = datetime.fromisoformat(
+            log_data["original_date"].replace("Z", "+00:00")
+        ).date()
+        new_date = datetime.fromisoformat(log_data["reading_date"]).date()
+
+        user_id = ObjectId(current_user["id"])
+        book_id = log_data["book_id"]
+
+        # Validate that the log exists
+        existing_log = await reading_logs_col.find_one(
+            {
+                "user_id": user_id,
+                "book_id": book_id,
+                "reading_date": datetime.combine(original_date, datetime.min.time()),
+            }
+        )
+
+        if not existing_log:
+            raise HTTPException(status_code=404, detail="Reading log not found")
+
+        # Update the log
+        await reading_logs_col.update_one(
+            {
+                "user_id": user_id,
+                "book_id": book_id,
+                "reading_date": datetime.combine(original_date, datetime.min.time()),
+            },
+            {
+                "$set": {
+                    "pages_read": log_data["pages_read"],
+                    "current_page": log_data.get("current_page", 0),
+                    "notes": log_data["notes"],
+                    "reading_date": datetime.combine(new_date, datetime.min.time()),
+                    "updated_at": datetime.now(timezone.utc),
+                },
+            },
+        )
+
+        # Update user's book current_page if this was the most recent log
+        # Get the most recent log for this book
+        latest_log = await reading_logs_col.find_one(
+            {"user_id": user_id, "book_id": book_id}, sort=[("reading_date", -1)]
+        )
+
+        if latest_log:
+            await user_books_col.update_one(
+                {"user_id": user_id, "book_id": book_id},
+                {
+                    "$set": {
+                        "current_page": latest_log["current_page"],
+                        "updated_at": datetime.now(timezone.utc),
+                    }
+                },
+            )
+
+        logging.info(f"Modified reading log for book {book_id}")
+        return {"message": "Reading log modified successfully"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error modifying reading log: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500, detail=f"Error modifying reading log: {str(e)}"
+        )
+
+
+# Remove reading log
+@router.post("/user/log/remove")
+async def remove_log_reading(
+    log_data: dict = Body(...),
+    reading_logs_col=Depends(get_reading_logs_collection),
+    user_books_col=Depends(get_user_books_collection),
+    current_user: dict = Depends(get_current_user),
+):
+    print(log_data)
+    try:
+        user_id = ObjectId(current_user["id"])
+        log_id = ObjectId(log_data["log_id"])
+
+        # Get the log before deleting it to know how many pages were read
+        log_to_delete = await reading_logs_col.find_one({"_id": log_id})
+        if not log_to_delete:
+            raise HTTPException(status_code=404, detail="Reading log not found")
+
+        book_id = log_to_delete["book_id"]
+        pages_read_in_log = log_to_delete["pages_read"]
+        log_date = log_to_delete["reading_date"]
+
+        # Delete the log
+        await reading_logs_col.delete_one({"_id": log_id})
+
+        # Update user's book progress
+        # Get the most recent log for this book after deletion
+        latest_log = await reading_logs_col.find_one(
+            {"user_id": user_id, "book_id": book_id}, sort=[("reading_date", -1)]
+        )
+
+        update_data = {"updated_at": datetime.now(timezone.utc)}
+
+        if latest_log:
+            # If there are still logs, update current_page to the latest log's current_page
+            update_data["current_page"] = latest_log["current_page"]
+            update_data["last_read_date"] = latest_log["reading_date"]
+        else:
+            # If no logs remain, reset progress
+            update_data["current_page"] = 0
+            update_data["last_read_date"] = None
+            update_data["start_date"] = None
+
+        await user_books_col.update_one(
+            {"user_id": user_id, "book_id": book_id}, {"$set": update_data}
+        )
+
+        logging.info(
+            f"Removed reading log for book {book_id} and updated book progress"
+        )
+        return {"message": "Reading log removed successfully"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error removing reading log: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500, detail=f"Error removing reading log: {str(e)}"
+        )
+
+
+@router.get("/user/logs")
+async def get_library_log(
+    book_id: str = Query(..., description="Book id to fetch logs for"),
     reading_logs_col=Depends(get_reading_logs_collection),
     current_user: dict = Depends(get_current_user),
 ):
@@ -319,16 +590,23 @@ async def get_book_logs(
     try:
         logs = (
             await reading_logs_col.find(
-                {"user_id": ObjectId(current_user["_id"]), "book_id": book_id}
+                {
+                    "user_id": ObjectId(current_user["id"]),
+                    "book_id": book_id,
+                }
             )
             .sort("reading_date", -1)
             .to_list(None)
         )
 
+        if not logs:
+            return {"logs": []}
+
         # Convert ObjectId to string
         for log in logs:
             log["_id"] = str(log["_id"])
             log["user_id"] = str(log["user_id"])
+            log["book_id"] = str(log["book_id"])
 
         return {"logs": logs}
     except Exception as e:

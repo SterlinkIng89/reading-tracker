@@ -46,8 +46,10 @@ class UserBook(BaseModel):
 
 # Model for creating reading log
 class ReadingLogCreate(BaseModel):
+    book_id: str = Field(..., description="Book ID")
     pages_read: int = Field(..., gt=0, description="Pages read in this session")
     current_page: int = Field(..., ge=0, description="Current page after reading")
+    reading_date: Optional[str] = Field(None, description="Reading date (ISO format)")
     reading_time_minutes: Optional[int] = Field(
         None, description="Reading time in minutes"
     )
@@ -58,9 +60,10 @@ class ReadingLogCreate(BaseModel):
 class ReadingLog(BaseModel):
     id: Optional[str] = Field(default=None, alias="_id")
     user_id: str = Field(..., description="User ID")
-    book_id: str = Field(..., description="Google Books ID")
+    book_id: str = Field(..., description="Book ID")
     reading_date: date = Field(..., description="Reading date")
     pages_read: int = Field(..., description="Pages read")
+    current_page: int = Field(..., ge=0, description="Current page after reading")
     notes: Optional[str] = Field("", description="Reading notes")
     created_at: datetime = Field(default_factory=datetime.utcnow)
 

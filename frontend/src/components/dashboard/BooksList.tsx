@@ -5,12 +5,14 @@ import { authFetch } from "../../../public/auth/auth";
 import apiRoutes from "../../../public/apis/apiRoutes";
 
 interface Book {
+  _id: string;
   book_id: string;
   title: string;
   authors: string[];
   thumbnail?: string;
   total_pages: number;
   current_page: number;
+  progress_percentage: number;
   status: "reading" | "completed" | "abandoned";
   last_read_date?: string;
 }
@@ -26,19 +28,44 @@ const BooksList: React.FC = () => {
 
   useEffect(() => {
     const handleBookAdded = () => loadUserBooks();
-    window.addEventListener("bookAdded", handleBookAdded);
     const handleBookRemoved = () => loadUserBooks();
-    const handleBookUpdated = () => loadUserBooks();
+    const handleBookUpdated = () => {
+      console.log(
+        "📚 BooksList received bookUpdated event, refreshing books..."
+      );
+      loadUserBooks();
+    };
+    const handleLogAdded = () => {
+      console.log("📝 BooksList received logAdded event, refreshing books...");
+      loadUserBooks();
+    };
+    const handleLogUpdated = () => {
+      console.log(
+        "📝 BooksList received logUpdated event, refreshing books..."
+      );
+      loadUserBooks();
+    };
+
+    window.addEventListener("bookAdded", handleBookAdded);
     window.addEventListener("bookRemoved", handleBookRemoved);
     window.addEventListener("bookUpdated", handleBookUpdated);
-    return () => window.removeEventListener("bookAdded", handleBookAdded);
+    window.addEventListener("logAdded", handleLogAdded);
+    window.addEventListener("logUpdated", handleLogUpdated);
+
+    return () => {
+      window.removeEventListener("bookAdded", handleBookAdded);
+      window.removeEventListener("bookRemoved", handleBookRemoved);
+      window.removeEventListener("bookUpdated", handleBookUpdated);
+      window.removeEventListener("logAdded", handleLogAdded);
+      window.removeEventListener("logUpdated", handleLogUpdated);
+    };
   }, []);
 
   const loadUserBooks = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await authFetch(apiRoutes.books.library);
+      const response = await authFetch(apiRoutes.books.library.get);
       if (!response.ok) throw new Error("Failed to load books");
 
       const data = await response.json();

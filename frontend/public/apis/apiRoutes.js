@@ -16,9 +16,19 @@ const apiRoutes = {
   },
   books: {
     search: `${API_BASE}/books/search`,
-    add: `${API_BASE}/books/user/library/add`,
-    remove: `${API_BASE}/books/user/library/remove`,
-    library: `${API_BASE}/books/user/library`,
+
+    library: {
+      get: `${API_BASE}/books/user/library`,
+      getBook: `${API_BASE}/books/user/library/book`,
+      add: `${API_BASE}/books/user/library/add`,
+      remove: `${API_BASE}/books/user/library/remove`,
+    },
+    logs: {
+      get: `${API_BASE}/books/user/logs`,
+      add: `${API_BASE}/books/user/log/add`,
+      modify: `${API_BASE}/books/user/log/modify`,
+      remove: `${API_BASE}/books/user/log/remove`,
+    },
   },
 };
 

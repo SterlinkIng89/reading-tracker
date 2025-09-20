@@ -2,16 +2,16 @@ import React, { useState } from "react";
 import BookEditModal from "./modals/BookEditModal";
 
 interface Book {
-  _id?: string;
-  book_id?: string;
-  title?: string;
-  authors?: string[];
+  _id: string;
+  book_id: string;
+  title: string;
+  authors: string[];
   thumbnail?: string;
-  total_pages?: number;
-  totalPages?: number;
-  current_page?: number;
-  last_read_date?: string | null;
-  status?: "reading" | "completed" | "abandoned";
+  total_pages: number;
+  current_page: number;
+  progress_percentage: number;
+  status: "reading" | "completed" | "abandoned";
+  last_read_date?: string;
   [k: string]: any;
 }
 
@@ -28,16 +28,15 @@ const BookCard: React.FC<BookCardProps> = ({
 }) => {
   // derive fields from book object (backwards-compatible if undefined)
   const title = book?.title ?? "Unknown Book";
-  const author = (book?.authors && book.authors[0]) || "Unknown Author";
   const coverUrl = book?.thumbnail;
-  const status = (book?.status as any) ?? "reading";
-  const totalPages = book?.total_pages ?? book?.totalPages ?? 0;
-  const currentPage = book?.current_page ?? book?.currentPage ?? 0;
-  const lastReadDate = book?.last_read_date ?? book?.lastReadDate ?? undefined;
+  const totalPages = book?.total_pages ?? 0;
+  const currentPage = book?.current_page ?? 0;
+  const lastReadDate = book?.last_read_date ?? undefined;
   const bookId = book?._id ?? book?.book_id;
 
   const progressPercent =
-    totalPages > 0 ? Math.min((currentPage / totalPages) * 100, 100) : 0;
+    book?.progress_percentage ??
+    (totalPages > 0 ? Math.min((currentPage / totalPages) * 100, 100) : 0);
 
   const [isEditOpen, setIsEditOpen] = useState(false);
 

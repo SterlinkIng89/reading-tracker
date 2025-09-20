@@ -104,7 +104,7 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
     if (!selected) return;
     setBusy(true);
     try {
-      const res = await authFetch(apiRoutes.books.add, {
+      const res = await authFetch(apiRoutes.books.library.add, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(selected),
@@ -120,7 +120,6 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
       setBusy(false);
     }
   }
-
   if (!open) return null;
 
   return ReactDOM.createPortal(
