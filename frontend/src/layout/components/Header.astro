@@ -1,17 +1,17 @@
 ---
-// Header component for Reading Tracker
+
 ---
 
 <header
-  class="fixed inset-x-0 top-0 bg-gray-900/90 backdrop-blur-md border-b border-gray-700 shadow-lg z-50"
+  class="fixed inset-x-0 top-0 bg-header border-b-border-strong border-b-2 z-50"
 >
   <div
-    class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between"
+    class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative"
   >
     <div class="flex items-center space-x-8">
       <a
         href="/"
-        class="flex items-center space-x-2 text-lg font-bold text-slate-400 hover:text-slate-300 transition-colors"
+        class="flex items-center space-x-2 text-xl font-bold text-primary hover:text-primary-hover transition-colors"
       >
         <svg
           class="w-6 h-6 flex-shrink-0"
@@ -20,14 +20,16 @@
         >
           <path
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          ></path>
+          >
+          </path>
         </svg>
         <span class="leading-tight">Reading Tracker</span>
       </a>
+
       <nav class="hidden md:flex space-x-6" aria-label="Primary">
         <a
           href="/dashboard"
-          class="text-base font-medium text-gray-300 hover:text-slate-400 transition-colors duration-200 leading-tight"
+          class="text-base font-medium text-secondary hover:text-secondary-hover transition-colors duration-200 leading-tight"
           >Dashboard</a
         >
       </nav>
@@ -36,7 +38,7 @@
     <!-- Mobile menu button -->
     <button
       id="mobile-menu-button"
-      class="md:hidden p-2 rounded-md text-gray-300 hover:text-gray-100 hover:bg-gray-800 transition-colors"
+      class="md:hidden p-2 rounded-md text-secondary transition-colors"
     >
       <svg
         class="w-6 h-6"
@@ -57,8 +59,7 @@
         <a
           id="signin-link"
           href="/signin"
-          class="text-sm font-medium text-slate-400 hover:text-slate-300 transition-colors"
-          >Sign in</a
+          class="text-sm font-medium text-secondary">Sign in</a
         >
       </slot>
     </div>
@@ -67,12 +68,12 @@
   <!-- Mobile menu -->
   <div
     id="mobile-menu"
-    class="md:hidden hidden bg-gray-900 border-t border-gray-700"
+    class="md:hidden hidden bg-gray-900 border-t border-header-border"
   >
     <div class="px-4 py-3 space-y-3">
       <a
         href="/dashboard"
-        class="block text-sm font-medium text-gray-300 hover:text-slate-400 transition-colors"
+        class="block text-sm font-medium text-secondary hover:text-secondary-hover transition-colors"
         >Dashboard</a
       >
       <div id="mobile-actions" class="pt-2 border-t border-gray-700">
@@ -121,12 +122,12 @@
     if (logged) {
       const username = payload.username;
       const userSpan = document.createElement("span");
-      userSpan.textContent = `Hola, ${username}`;
-      userSpan.className = "text-sm font-medium text-gray-300";
+      userSpan.textContent = `Hi, ${username}`;
+      userSpan.className = "text-sm font-medium text-secondary";
       headerActions.appendChild(userSpan);
 
       const btn = document.createElement("button");
-      btn.textContent = "Sing out";
+      btn.textContent = "Sign out";
       btn.className =
         "text-sm font-medium text-red-400 hover:text-red-300 transition-colors";
       btn.addEventListener("click", async () => {
@@ -161,7 +162,7 @@
       // Mobile version
       const mobileUserSpan = document.createElement("span");
       mobileUserSpan.textContent = `Hola, ${username}`;
-      mobileUserSpan.className = "text-sm font-medium text-gray-300 block";
+      mobileUserSpan.className = "text-sm font-medium text-secondary block";
       mobileActions.appendChild(mobileUserSpan);
 
       const mobileBtn = document.createElement("button");
@@ -177,7 +178,7 @@
       const a = document.createElement("a");
       a.href = "/signin";
       a.className =
-        "text-sm font-medium text-slate-400 hover:text-slate-300 transition-colors";
+        "text-sm font-medium text-secondary hover:text-secondary-hover transition-colors";
       a.textContent = "Sign in";
       headerActions.appendChild(a);
 
@@ -185,7 +186,7 @@
       const mobileA = document.createElement("a");
       mobileA.href = "/signin";
       mobileA.className =
-        "text-sm font-medium text-slate-400 hover:text-slate-300 transition-colors block";
+        "text-sm font-medium text-secondary hover:text-secondary-hover transition-colors block";
       mobileA.textContent = "Sign in";
       mobileActions.appendChild(mobileA);
     }
