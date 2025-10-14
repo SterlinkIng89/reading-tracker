@@ -2,6 +2,8 @@
 const { title = "Tracker" } = Astro.props;
 import Header from "./components/Header.astro";
 import Footer from "./components/Footer.astro";
+
+import "../styles/global.css";
 ---
 
 <html lang="en">
@@ -10,14 +12,12 @@ import Footer from "./components/Footer.astro";
     <meta name="viewport" content="width=device-width" />
     <title>{title}</title>
   </head>
-  <body
-    class="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-black text-gray-100"
-  >
+  <body class="min-h-screen flex flex-col bg-page-gradient">
     <!-- Header Component -->
     <Header />
 
     <!-- Main content -->
-    <main class="pt-14 flex-grow min-h-[calc(100vh-10rem)]">
+    <main class="pt-16 flex-grow min-h-[calc(100vh-10rem)]">
       <slot />
     </main>
 
