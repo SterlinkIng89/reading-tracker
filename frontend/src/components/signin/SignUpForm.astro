@@ -1,17 +1,17 @@
 ---
-// SignUpForm component
+
 ---
 
 <form id="register-form" class="space-y-5">
   <!-- Username Field -->
-  <div class="space-y-2">
-    <label class="block text-sm font-semibold text-gray-300">Username</label>
+  <div class="space-y-2 text-secondary">
+    <label class="block text-sm font-semibold">Username</label>
     <div class="relative">
       <div
         class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
       >
         <svg
-          class="h-5 w-5 text-gray-500"
+          class="h-5 w-5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -25,7 +25,7 @@
         </svg>
       </div>
       <input
-        class="block w-full pl-10 pr-3 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all duration-200 bg-gray-700 focus:bg-gray-600 text-white placeholder-gray-400"
+        class="block w-full pl-10 pr-3 py-3 border border-input-border rounded-lg focus:outline-none focus:ring-1 focus:ring-accent/60 focus:ring-offset-0 focus:border-input-focus-border transition-shadow duration-200 bg-input-bg text-secondary placeholder-input-placeholder"
         type="text"
         name="username"
         autocomplete="username"
@@ -36,14 +36,14 @@
   </div>
 
   <!-- Password Field -->
-  <div class="space-y-2">
-    <label class="block text-sm font-semibold text-gray-300">Password</label>
+  <div class="space-y-2 text-secondary">
+    <label class="block text-sm font-semibold">Password</label>
     <div class="relative">
       <div
         class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
       >
         <svg
-          class="h-5 w-5 text-gray-500"
+          class="h-5 w-5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -57,7 +57,7 @@
         </svg>
       </div>
       <input
-        class="block w-full pl-10 pr-10 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-all duration-200 bg-gray-700 focus:bg-gray-600 text-white placeholder-gray-400"
+        class="block w-full pl-10 pr-10 py-3 border border-input-border rounded-lg focus:outline-none focus:ring-1 focus:ring-accent/60 focus:ring-offset-0 focus:border-input-focus-border transition-shadow duration-200 bg-input-bg text-primary placeholder-input-placeholder"
         type="password"
         name="password"
         autocomplete="new-password"
@@ -70,7 +70,7 @@
         id="toggle-register-password"
       >
         <svg
-          class="h-5 w-5 text-gray-500 hover:text-gray-300"
+          class="h-5 w-5 text-secondary hover:text-secondary-hover"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -96,7 +96,11 @@
   <div class="space-y-4 pt-2">
     <button
       type="submit"
-      class="w-full flex justify-center items-center px-6 py-3 bg-gradient-to-r from-slate-600 to-slate-700 text-white font-semibold rounded-lg hover:from-slate-700 hover:to-slate-800 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+      class="w-full flex justify-center items-center px-6 py-3 text-primary font-semibold rounded-lg
+      bg-gradient-to-r from-accent-base to-accent-light
+      hover:from-accent-base hover:to-accent-hover
+      focus:ring-2 focus:ring-accent focus:ring-offset-2
+      transform transition-all duration-200 hover:scale-[1.01] active:scale-[0.98] shadow-lg"
       id="register-btn"
     >
       <svg
@@ -118,7 +122,7 @@
     <div class="text-center">
       <button
         type="button"
-        class="inline-flex items-center text-sm text-slate-400 hover:text-slate-300 font-medium transition-colors duration-200 hover:underline"
+        class="inline-flex items-center text-sm text-secondary hover:text-secondary-hover font-medium transition-colors duration-200 hover:underline"
         id="show-login"
       >
         <svg
