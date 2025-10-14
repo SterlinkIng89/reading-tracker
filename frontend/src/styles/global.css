@@ -1,3 +1,110 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  /* ==================== TEXT COLORS ==================== */
+  --color-text-primary: 240 234 228; /* #F0EAE4 */
+  --color-text-secondary: 216 213 211; /* #D8D5D3  */
+  --color-text-tertiary: 168 168 169; /* #A8A8A9  */
+  --color-text-accent: 0 52 89; /* #003459  */
+
+  --color-text-primary-hover: 255 255 255; /* #FFFFFF */
+  --color-text-secondary-hover: 240 234 228; /* #F0EAE4  */
+  --color-text-accent-hover: 66 165 245; /* #42A5F5  */
+
+  /* ==================== SURFACES / BACKGROUNDS ==================== */
+  --color-bg-base: 18 18 18; /* #121212 - The darkest color, main page background */
+  --color-surface-low: 31 33 36; /* #1F2124 - Surface level 1 (Header/Footer, containers close to BG) */
+  --color-surface-medium: 31 34 40; /* #1F2228  - Surface level 2 (Cards, main panels/sections) */
+  --color-surface-high: 47 51 59; /* #2F333B  - Surface level 3 (Modals, popups, highest elevation) */
+
+  /* ==================== ACCENT & FUNCTIONAL COLORS ==================== */
+  /* Primary Interactive Colors (Buttons, Progress Bars) */
+  --color-accent-base: 0 08 20; /* #000814 - Main brand/accent color (Navy Blue) */
+  --color-accent-dark: 0 29 61; /* #001d3d - Darker blue (Used as background for primary buttons) */
+  --color-accent-hover: 0 53 102; /* #003566 - Lighter blue (Used for hover states) */
+  --color-accent-light: 0 102 204; /* #0066CC - Lighter blue (Used for hover states) */
+  --color-accent-shadow: 0 21 42; /* #00152A */
+
+  /* Secondary & Terciary Button Styles */
+  --color-btn-secondary-base: 163 194 227; /* #A3C3E3 - Base color for secondary links/outline buttons */
+  --color-btn-secondary-hover-bg: 0 53 102; /* #003566 - Subtle BG for secondary button on hover (low opacity) */
+  --color-btn-tertiary-bg: 47 51 59; /* #2F333B - Background for neutral/tertiary buttons (using Surface-high) */
+  --color-btn-tertiary-hover-bg: 64 64 64; /* #404040 - Hover BG for tertiary buttons */
+
+  /* Utility / Semantic Colors */
+  --color-success: 76 175 80; /* #4CAF50 - Green (e.g., progress completed, saved status) */
+  --color-danger: 183 28 28; /* #B71C1C - Red (e.g., delete actions, error messages) */
+  --color-warning: 255 193 7; /* #FFC107 - Yellow/Amber (e.g., alerts, caution messages) */
+
+  /* ==================== DIVIDERS / BORDERS ==================== */
+  --color-border-default: 64 64 64; /* #404040 - Subtle line separators */
+  --color-border-strong: 83 81 81; /* #535151 - Stronger borders (e.g., separating header/footer) */
+
+  /* ==================== FORM INPUTS ==================== */
+  --color-input-bg: 42 42 42; /* #2A2A2A - Fondo de campo, debe ser Surface-medium para contraste */
+  --color-input-border: 64 64 64; /* #404040 - Borde normal (sutil) */
+  --color-input-placeholder: 168 168 169; /* #A8A8A9 - Color del placeholder (Gris secundario) */
+
+  --color-input-focus-border: 30 136 229; /* #1E88E5 - Borde al estar enfocado (Tu acento base) */
+  --color-input-error-border: 183 28 28; /* #B71C1C - Borde al haber error (Tu color danger) */
+
+  /* Aliases expected by tailwind config (keep in sync) */
+  --color-text-highlight: 255 255 255; /* Titles / highlights */
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  border-radius: 4px;
+  margin-right: 2px;
+  opacity: 0.6;
+  filter: invert(0.8);
+}
+
+.bg-page-gradient {
+  background-image: linear-gradient(
+    to top,
+    rgb(var(--color-bg-base)) 10%,
+    rgb(var(--color-surface-low)) 90%
+  );
+}
+
+/* ==================== Global thin scrollbar (WebKit + Firefox) ==================== */
+:root {
+  --scrollbar-thumb: rgba(0, 0, 0, 0.65);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.85);
+  --scrollbar-track: transparent;
+}
+
+/* Estilos básicos para navegadores Webkit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px; /* Ancho de la barra vertical */
+  height: 8px; /* Altura de la barra horizontal (si aplica) */
+}
+
+/* Estilo para el fondo de la barra (track) */
+::-webkit-scrollbar-track {
+  /* Usamos un color de superficie bajo para que sea discreto */
+  background: rgb(var(--color-surface-low)); /* #1F2124 */
+  border-radius: 10px;
+}
+
+/* Estilo para el indicador móvil (thumb) */
+::-webkit-scrollbar-thumb {
+  /* Usamos un gris más claro para hacerlo visible */
+  background: rgb(var(--color-surface-high)); /* #2F333B */
+  border-radius: 10px;
+}
+
+/* Estilo para el indicador móvil al hacer hover */
+::-webkit-scrollbar-thumb:hover {
+  /* Al hacer hover, usamos tu color de acento oscuro para darle interactividad */
+  background: rgb(var(--color-accent-dark)); /* #001d3d */
+}
+
+/* Estilo para navegadores Firefox (más limitado en personalización) */
+* {
+  scrollbar-color: rgb(var(--color-surface-high)) rgb(var(--color-surface-low)); /* thumb track */
+  scrollbar-width: thin; /* 'auto' o 'thin' */
+}
