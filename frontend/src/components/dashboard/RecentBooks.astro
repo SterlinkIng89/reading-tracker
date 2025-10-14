@@ -1,14 +1,11 @@
 ---
-// RecentBooks component - Shows recent books with add book card
 import BooksList from "./BooksList.tsx";
 ---
 
 <div class="mb-8">
   <h2 class="text-2xl font-bold text-white mb-6">My Books</h2>
 
-  <!-- Books Grid -->
   <div class="" id="books-grid">
-    <!-- Recent Books will be loaded here by React (BooksList renders the Add card) -->
     <BooksList client:load />
   </div>
 </div>

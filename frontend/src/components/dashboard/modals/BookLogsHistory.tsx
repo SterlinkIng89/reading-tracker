@@ -34,7 +34,7 @@ export default function BookLogsHistory({ logs, book, onLogsUpdate }: Props) {
 
   if (!logs || logs.length === 0) {
     return (
-      <div className="mt-4 text-xs text-gray-400">
+      <div className="mt-4 text-xs text-secondary">
         No reading logs available for this book.
       </div>
     );
@@ -126,14 +126,14 @@ export default function BookLogsHistory({ logs, book, onLogsUpdate }: Props) {
   };
 
   return (
-    <div className="mt-4">
-      <h4 className="text-sm font-semibold text-white mb-2">Logs</h4>
-      <hr className="border-gray-700 mb-3" />
+    <div className="mt-4 bg-surface-high p-3 rounded-lg">
+      <h4 className="text-sm font-semibold text-highlight mb-2">Logs</h4>
+      <hr className="border-border-strong mb-3" />
       <div className="space-y-2 max-h-40 overflow-y-auto">
         {logs.map((log) => (
           <div
             key={log._id}
-            className="text-md text-gray-300 bg-gray-800 p-2 rounded"
+            className="text-sm text-primary bg-surface-medium p-1 rounded-md border border-border-default"
           >
             {editingId === log._id ? (
               <div className="flex justify-between items-center">
@@ -146,9 +146,9 @@ export default function BookLogsHistory({ logs, book, onLogsUpdate }: Props) {
                         prev ? { ...prev, date: e.target.value } : null
                       )
                     }
-                    className="bg-gray-700 text-gray-100 px-2 py-1 rounded text-sm w-32"
+                    className="bg-input-bg text-primary px-2 py-1 rounded text-sm w-32 border border-input-border"
                   />
-                  <span className="text-gray-400 text-sm">Read</span>
+                  <span className="text-secondary text-sm">Read</span>
                   <input
                     type="number"
                     min={0}
@@ -158,9 +158,9 @@ export default function BookLogsHistory({ logs, book, onLogsUpdate }: Props) {
                         prev ? { ...prev, pages: Number(e.target.value) } : null
                       )
                     }
-                    className="bg-gray-700 text-gray-100 px-2 py-1 rounded text-sm w-20"
+                    className="bg-input-bg text-primary px-2 py-1 rounded text-sm w-20 border border-input-border"
                   />
-                  <span className="text-gray-400 text-sm">pages until</span>
+                  <span className="text-secondary text-sm">pages until</span>
                   <input
                     type="number"
                     min={0}
@@ -172,27 +172,33 @@ export default function BookLogsHistory({ logs, book, onLogsUpdate }: Props) {
                           : null
                       )
                     }
-                    className="bg-gray-700 text-gray-100 px-2 py-1 rounded text-sm w-20"
+                    className="bg-input-bg text-primary px-2 py-1 rounded text-sm w-20 border border-input-border"
                   />
                 </div>
 
                 <div className="flex gap-1">
                   <button
                     onClick={() => startDelete(log._id)}
-                    className="px-2 py-1 bg-red-600 hover:bg-red-500 rounded text-xs"
+                    className="px-2 py-1 bg-danger hover:bg-danger/90 rounded text-xs text-highlight focus:outline-none focus:ring-2 focus:ring-accent/60"
+                    aria-label="Erase log"
+                    title="Erase log"
                   >
                     Erase
                   </button>
                   <button
                     onClick={saveEdit}
                     disabled={saving}
-                    className="px-2 py-1 bg-green-600 hover:bg-green-500 rounded text-xs"
+                    className="px-2 py-1 bg-success hover:bg-success/90 rounded text-xs text-highlight focus:outline-none focus:ring-2 focus:ring-accent/60"
+                    aria-label="Save edit"
+                    title="Save edit"
                   >
                     {saving ? "..." : "✓"}
                   </button>
                   <button
                     onClick={cancelEdit}
-                    className="px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-xs"
+                    className="px-2 py-1 bg-surface-medium hover:bg-surface-high rounded text-xs text-secondary focus:outline-none focus:ring-2 focus:ring-accent/60"
+                    aria-label="Cancel edit"
+                    title="Cancel edit"
                   >
                     ✕
                   </button>
@@ -201,14 +207,17 @@ export default function BookLogsHistory({ logs, book, onLogsUpdate }: Props) {
             ) : (
               <div>
                 <div className="flex justify-between items-center">
-                  <span>
+                  <span className="text-secondary text-sm">
                     {new Date(log.reading_date).toLocaleDateString("es-ES", {
                       day: "2-digit",
                       month: "2-digit",
                       year: "numeric",
                     })}{" "}
-                    - Read {log.pages_read} pages until page{" "}
-                    {log.current_page ?? "N/A"}
+                    - Read <span className="font-medium">{log.pages_read}</span>{" "}
+                    pages until page{" "}
+                    <span className="font-medium">
+                      {log.current_page ?? "N/A"}
+                    </span>
                   </span>
                   <div className="flex gap-1">
                     {deletingId === log._id ? (
@@ -216,13 +225,15 @@ export default function BookLogsHistory({ logs, book, onLogsUpdate }: Props) {
                         <button
                           onClick={() => confirmDelete(log)}
                           disabled={saving}
-                          className="px-2 py-1 bg-red-600 hover:bg-red-500 rounded text-xs"
+                          className="px-2 py-1 bg-danger hover:bg-danger/90 rounded text-xs text-highlight focus:outline-none focus:ring-2 focus:ring-accent/60"
+                          aria-label="Confirm delete"
                         >
                           {saving ? "..." : "✓"}
                         </button>
                         <button
                           onClick={cancelDelete}
-                          className="px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-xs"
+                          className="px-2 py-1 bg-surface-medium hover:bg-surface-high rounded text-xs text-secondary focus:outline-none focus:ring-2 focus:ring-accent/60"
+                          aria-label="Cancel delete"
                         >
                           ✕
                         </button>
@@ -230,7 +241,8 @@ export default function BookLogsHistory({ logs, book, onLogsUpdate }: Props) {
                     ) : (
                       <button
                         onClick={() => startEdit(log)}
-                        className="px-2 py-1 bg-blue-600 hover:bg-blue-500 rounded text-xs"
+                        className="px-2 py-1 bg-accent-base hover:bg-accent-hover rounded text-xs text-highlight focus:outline-none focus:ring-2 focus:ring-accent/60"
+                        aria-label="Edit log"
                       >
                         Edit
                       </button>
@@ -238,7 +250,7 @@ export default function BookLogsHistory({ logs, book, onLogsUpdate }: Props) {
                   </div>
                 </div>
                 {log.notes && (
-                  <div className="text-gray-500 italic mt-1">
+                  <div className="text-secondary italic mt-1">
                     Notes: {log.notes}
                   </div>
                 )}

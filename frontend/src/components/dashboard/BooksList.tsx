@@ -30,19 +30,12 @@ const BooksList: React.FC = () => {
     const handleBookAdded = () => loadUserBooks();
     const handleBookRemoved = () => loadUserBooks();
     const handleBookUpdated = () => {
-      console.log(
-        "📚 BooksList received bookUpdated event, refreshing books..."
-      );
       loadUserBooks();
     };
     const handleLogAdded = () => {
-      console.log("📝 BooksList received logAdded event, refreshing books...");
       loadUserBooks();
     };
     const handleLogUpdated = () => {
-      console.log(
-        "📝 BooksList received logUpdated event, refreshing books..."
-      );
       loadUserBooks();
     };
 
@@ -115,8 +108,7 @@ const BooksList: React.FC = () => {
 
   return (
     <>
-      {/* Grid controlled by BooksList: each card is 100px wide and wraps */}
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-5 gap-y-7">
         <div key="add-new" className="flex-shrink-0">
           <BookCard isNewBook onAdd={openAddModal} />
         </div>

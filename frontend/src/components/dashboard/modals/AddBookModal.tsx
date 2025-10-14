@@ -1,13 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import apiRoutes from "../../../../public/apis/apiRoutes";
 import { authFetch } from "../../../../public/auth/auth";
+
+import "../../../styles/loader.css";
 
 interface BookHit {
   id?: string;
   title?: string;
   authors?: string[];
   thumbnail?: string;
+  description?: string;
   [k: string]: any;
 }
 
@@ -21,10 +24,19 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
   const [results, setResults] = useState<BookHit[]>([]);
   const [selected, setSelected] = useState<BookHit | null>(null);
   const [busy, setBusy] = useState(false);
+
   const debounceRef = useRef<number | null>(null);
   const resultsRef = useRef<HTMLDivElement | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const modalRef = useRef<HTMLDivElement | null>(null);
   const startedOutsideRef = useRef(false);
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const PAGE_SIZE = 10;
 
   useEffect(() => {
     if (!open) {
@@ -32,24 +44,25 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
       setResults([]);
       setSelected(null);
       setBusy(false);
+      setPage(1);
+      setHasMore(false);
+      setLoadingMore(false);
+      setLoading(false);
     }
   }, [open]);
 
-  // Close when the initial pointerdown was outside the modal.
   useEffect(() => {
     if (!open) return;
 
     function onPointerDown(e: PointerEvent) {
       const target = e.target as Node | null;
       if (!modalRef.current) return;
-      // mark if the pointerdown started outside the modal
       startedOutsideRef.current = target
         ? !modalRef.current.contains(target)
         : false;
     }
 
     function onPointerUp() {
-      // if the interaction started outside, close the modal on pointerup
       if (startedOutsideRef.current) {
         startedOutsideRef.current = false;
         onClose();
@@ -68,26 +81,81 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
   useEffect(() => {
     if (!query || query.trim().length < 2) {
       setResults([]);
+      setPage(1);
+      setHasMore(false);
       return;
     }
+
+    setPage(1);
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
-    debounceRef.current = window.setTimeout(() => void bookSearch(query), 300);
+    debounceRef.current = window.setTimeout(
+      () => void bookSearch(query, 1, false),
+      300
+    );
     return () => {
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
     };
   }, [query]);
 
-  async function bookSearch(q: string) {
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    const root = resultsRef.current;
+    if (!sentinel || !root) return;
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const ent = entries[0];
+        if (ent.isIntersecting && hasMore && !loadingMore) {
+          void bookSearch(query, page + 1, true);
+        }
+      },
+      { root, rootMargin: "200px" }
+    );
+
+    obs.observe(sentinel);
+    return () => obs.disconnect();
+  }, [query, page, hasMore, loadingMore]);
+
+  async function bookSearch(q: string, p = 1, append = false) {
     try {
+      if (p > 1) setLoadingMore(true);
+      else setLoading(true);
       const res = await authFetch(
-        `${apiRoutes.books.search}?query=${encodeURIComponent(q)}`
+        `${apiRoutes.books.search}?query=${encodeURIComponent(
+          q
+        )}&page=${p}&page_size=${PAGE_SIZE}`
       );
       if (!res.ok) throw new Error("Search failed");
       const json = await res.json();
-      setResults(json.books || []);
+      const books: BookHit[] = json.books || [];
+      if (append) {
+        setResults((prev) => [...prev, ...books]);
+      } else {
+        setResults(books);
+        // reset scroll
+        requestAnimationFrame(() => {
+          const c = resultsRef.current;
+          if (c) c.scrollTop = 0;
+        });
+      }
+
+      const apiHasMore =
+        typeof json.hasMore === "boolean"
+          ? json.hasMore
+          : json.nextPage
+          ? true
+          : typeof json.totalPages === "number"
+          ? p < json.totalPages
+          : books.length > 0;
+      setHasMore(apiHasMore);
+      setPage(p);
     } catch (err) {
       console.error("Book search error", err);
-      setResults([]);
+      if (!append) setResults([]);
+      setHasMore(false);
+    } finally {
+      if (p > 1) setLoadingMore(false);
+      else setLoading(false);
     }
   }
 
@@ -110,7 +178,6 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
         body: JSON.stringify(selected),
       });
       if (!res.ok) throw new Error("Add failed");
-      // dispatch bookAdded so lists refresh
       window.dispatchEvent(new CustomEvent("bookAdded"));
       onClose();
     } catch (err) {
@@ -120,22 +187,24 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
       setBusy(false);
     }
   }
+
   if (!open) return null;
 
   return ReactDOM.createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-start justify-center z-50 p-6">
       <div
         ref={modalRef}
-        className="bg-gray-900 rounded-lg w-full max-w-2xl mx-auto mt-16 overflow-hidden"
+        className="bg-gray-900 rounded-lg w-full max-w-4xl mx-auto mt-12 overflow-hidden"
       >
         <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-white">
+          <h3 className="text-xl font-semibold text-white">
             Search and add books
           </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             Close
           </button>
         </div>
+
         <div className="p-4">
           <input
             value={query}
@@ -144,52 +213,153 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
             placeholder="Search by title or author..."
             autoFocus
           />
-          <div
-            ref={resultsRef}
-            id="search-results"
-            className="mt-4 max-h-64 overflow-auto space-y-2"
-          >
-            {results.length === 0 && query.trim().length >= 2 && (
-              <p className="text-sm text-gray-400">No results found</p>
-            )}
-            {results.map((it, idx) => (
-              <div
-                key={idx}
-                className={`p-3 rounded bg-gray-800 hover:bg-gray-700 cursor-pointer flex gap-3 items-center ${
-                  selected === it ? "selected border border-indigo-600" : ""
-                }`}
-                onClick={() => setSelected(it)}
-              >
-                <div className="w-12 h-16 bg-gray-700 flex-shrink-0">
-                  {it.thumbnail ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={it.thumbnail}
-                      alt="cover"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      No cover
+
+          <div className="mt-4">
+            <div
+              ref={resultsRef}
+              id="search-results"
+              className="max-h-[70vh] md:max-h-[70vh] overflow-auto p-2 bg-gray-900 rounded"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Loading Skeleton  */}
+                {loading &&
+                  [1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="bg-gray-800 rounded overflow-hidden animate-pulse p-2 flex gap-3"
+                    >
+                      <div className="w-[130px] h-[200px] bg-gray-700 flex-shrink-0 rounded" />
+                      <div className="flex-1">
+                        <div className="h-5 bg-gray-700 rounded w-3/4 mb-3" />
+                        <div className="h-4 bg-gray-700 rounded w-1/2 mb-4" />
+                        <div className="space-y-2">
+                          <div className="h-3 bg-gray-700 rounded w-full" />
+                          <div className="h-3 bg-gray-700 rounded w-5/6" />
+                          <div className="h-3 bg-gray-700 rounded w-2/3" />
+                        </div>
+                      </div>
                     </div>
+                  ))}
+
+                {/* No results */}
+                {!loading &&
+                  results.length === 0 &&
+                  query.trim().length >= 2 && (
+                    <p className="text-sm text-gray-400 col-span-full">
+                      No results found
+                    </p>
                   )}
-                </div>
-                <div className="flex-1 text-white">
-                  <div className="font-semibold">
-                    {escapeHtml(it.title || "Untitled")}
-                  </div>
-                  <div className="text-sm text-gray-400">
-                    {escapeHtml(
-                      it.authors && it.authors.length > 0
-                        ? it.authors.join(", ")
-                        : "Unknown author"
-                    )}
-                  </div>
-                </div>
+
+                {/* Results */}
+                {!loading &&
+                  results.map((it, idx) => (
+                    <div
+                      key={idx}
+                      className={`relative bg-gray-800 rounded overflow-hidden shadow-sm hover:shadow-lg transition-transform duration-200 ease-out cursor-pointer p-3 ${
+                        selected === it ? "ring-2 ring-indigo-500" : ""
+                      }`}
+                      onClick={() => setSelected(it)}
+                      tabIndex={0}
+                    >
+                      <div className="flex gap-4">
+                        <div className="w-[130px] h-[200px] bg-gray-700 flex-shrink-0 rounded overflow-hidden">
+                          {it.thumbnail ? (
+                            <img
+                              src={it.thumbnail}
+                              alt="cover"
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div
+                              className="w-full h-full flex flex-col items-center justify-center text-red-400 bg-red-900/10 border border-red-700 rounded"
+                              role="img"
+                              aria-label="No cover available"
+                              title="No cover available"
+                            >
+                              {/* Broken image / error icon */}
+                              <svg
+                                className="w-12 h-16"
+                                viewBox="0 0 24 32"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <rect
+                                  x="1"
+                                  y="1"
+                                  width="22"
+                                  height="30"
+                                  rx="2"
+                                  fill="#3f3f46"
+                                />
+                                <path
+                                  d="M4 24L9.5 16L13 20.5L18 12"
+                                  stroke="#fca5a5"
+                                  strokeWidth="1.6"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <path
+                                  d="M17 6L7 26"
+                                  stroke="#fecaca"
+                                  strokeWidth="1.6"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <circle cx="18" cy="6" r="2.2" fill="#fecaca" />
+                              </svg>
+                              <div className="text-xs text-red-300 mt-2">
+                                No cover
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex-1 flex flex-col">
+                          <div>
+                            <div className="font-semibold text-base text-white">
+                              {escapeHtml(it.title || "Untitled")}
+                            </div>
+                            <div className="text-sm text-gray-400">
+                              {escapeHtml(
+                                (it.authors || []).join(", ") ||
+                                  "Unknown author"
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="text-xs text-gray-300 mt-3 line-clamp-4 flex-1">
+                            {escapeHtml(
+                              it.description || "No description available"
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
               </div>
-            ))}
+
+              {loadingMore && (
+                <div
+                  className="flex items-center justify-center gap-3 py-3"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <span className="loader"></span>
+                </div>
+              )}
+
+              {!hasMore && results.length > 0 && (
+                <div className="text-sm text-gray-400 text-center py-3">
+                  No more results
+                </div>
+              )}
+
+              <div ref={sentinelRef} />
+            </div>
           </div>
         </div>
+
         <div className="p-4 border-t border-gray-700 flex justify-end gap-2">
           <button
             onClick={handleAddSelected}

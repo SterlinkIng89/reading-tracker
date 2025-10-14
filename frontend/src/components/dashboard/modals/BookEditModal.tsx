@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
-import apiRoutes, { API_BASE } from "../../../../public/apis/apiRoutes";
+import apiRoutes from "../../../../public/apis/apiRoutes";
 import { authFetch } from "../../../../public/auth/auth";
 import BookLogsHistory from "./BookLogsHistory";
+import BookDetails from "./BookDetails";
+import LogEntryForm from "./LogEntryForm";
 
 type Book = Record<string, any>;
 
@@ -232,115 +234,89 @@ export default function BookEditModal({ open, onClose, book }: Props) {
   };
 
   return ReactDOM.createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-start justify-center z-50 p-6">
+    <div className="fixed inset-0 bg-bg-base/50 flex items-start justify-center z-50 p-6">
       <div
         ref={modalRef}
-        className="bg-gray-900 rounded-lg w-full max-w-2xl mx-auto mt-16 overflow-hidden"
+        className="bg-surface-medium border-border-strong border rounded-xl w-full max-w-2xl mx-auto mt-16 overflow-hidden shadow-lg"
       >
-        <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-white">
+        <div className="p-4 border-b border-border-strong flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-highlight">
             {fullBookData?.title ?? book?.title ?? "Book"}
           </h3>
-          <button
-            onClick={handleCloseClick}
-            className="text-gray-400 hover:text-white"
-          >
-            Close
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={busy}
+              className={`inline-flex items-center gap-2 px-2 py-1 rounded text-sm ${
+                confirmDelete
+                  ? "bg-danger hover:bg-danger/90 text-highlight"
+                  : "bg-surface-low hover:bg-surface-medium text-secondary"
+              }`}
+              aria-label={confirmDelete ? "Confirm delete book" : "Delete book"}
+              title={confirmDelete ? "Confirm delete" : "Delete"}
+            >
+              {confirmDelete ? (
+                <span className="text-sm font-medium">Confirm</span>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  className="w-4 h-4"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M9 3v1H4v2h16V4h-5V3H9zm1 5v9h2V8h-2zm4 0v9h2V8h-2zM7 8v9h2V8H7z"
+                  />
+                </svg>
+              )}
+            </button>
+
+            <button
+              onClick={() => {
+                setConfirmDelete(false);
+                handleCloseClick();
+              }}
+              className="text-secondary hover:text-highlight p-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/50"
+              aria-label="Close modal"
+              title="Close"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className="w-5 h-5"
+                aria-hidden="true"
+              >
+                <path
+                  fill="currentColor"
+                  d="M18.3 5.71a1 1 0 00-1.41 0L12 10.59 7.11 5.7A1 1 0 105.7 7.11L10.59 12l-4.89 4.89a1 1 0 101.41 1.41L12 13.41l4.89 4.89a1 1 0 001.41-1.41L13.41 12l4.89-4.89a1 1 0 000-1.4z"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div className="p-4">
-          <div className="text-sm text-gray-300">
-            {fullBookData?.current_page ?? book?.current_page ?? 0} /{" "}
-            {fullBookData?.total_pages ?? book?.total_pages ?? "—"} pages
-          </div>
+          <BookDetails
+            fullBookData={fullBookData}
+            book={book}
+            newTotal={newTotal}
+            setNewTotal={(v: number | "") => setNewTotal(v)}
+            onSaveTotal={handleUpdateTotal}
+            busy={busy}
+          />
 
           <div className="mt-4 space-y-3">
-            <div>
-              <div className="flex gap-2 mb-2">
-                <input
-                  type="date"
-                  value={logDate}
-                  onChange={handleDateChange}
-                  className="bg-gray-800 text-gray-100 px-2 py-1 rounded"
-                />
-                <input
-                  type="number"
-                  min={0}
-                  value={String(logValue)}
-                  onChange={(e) => setLogValue(Number(e.target.value) || 0)}
-                  className="w-full bg-gray-800 text-gray-100 px-2 py-1 rounded"
-                />
-              </div>
-              <div className="text-sm text-gray-300 mb-2">
-                {(() => {
-                  const date = new Date(logDate);
-                  const dateStr = date.toLocaleDateString("es-MX", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  });
-                  return `${dateStr} I read ${logValue} pages`;
-                })()}
-              </div>
-              <button
-                type="button"
-                onClick={handleAdd}
-                disabled={busy}
-                className="px-3 py-1 bg-indigo-600 disabled:opacity-50 hover:bg-indigo-500 rounded text-sm"
-              >
-                {busy ? "Adding..." : "Add"}
-              </button>
-            </div>
-
-            {(fullBookData?.total_pages ?? book?.total_pages ?? 0) === 0 && (
-              <div>
-                <label className="text-xs text-gray-300">Set total pages</label>
-                <div className="mt-2 flex gap-2">
-                  <input
-                    type="number"
-                    min={0}
-                    value={newTotal === "" ? "" : String(newTotal)}
-                    onChange={(e) =>
-                      setNewTotal(
-                        e.target.value === "" ? "" : Number(e.target.value)
-                      )
-                    }
-                    className="w-full bg-gray-800 text-gray-100 px-2 py-1 rounded"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleUpdateTotal}
-                    disabled={busy}
-                    className="px-3 py-1 bg-emerald-600 disabled:opacity-50 hover:bg-emerald-500 rounded text-sm"
-                  >
-                    {busy ? "Saving..." : "Save"}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="pt-2 border-t border-gray-800 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={busy}
-                className={`px-3 py-1 rounded text-sm ${
-                  confirmDelete
-                    ? "bg-red-600 hover:bg-red-500"
-                    : "bg-gray-800 hover:bg-gray-700"
-                }`}
-              >
-                {confirmDelete ? "Confirm delete" : "Delete"}
-              </button>
-
-              <button
-                onClick={handleCloseClick}
-                className="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded text-sm"
-              >
-                Close
-              </button>
-            </div>
+            {/* Add Log */}
+            <LogEntryForm
+              logDate={logDate}
+              setLogDate={setLogDate}
+              logValue={logValue}
+              setLogValue={setLogValue}
+              onAdd={handleAdd}
+              busy={busy}
+            />
           </div>
 
           <BookLogsHistory

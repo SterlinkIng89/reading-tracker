@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Query, Depends, Body
 
 from bson import ObjectId
 from datetime import datetime, date, timezone
+import math
 import logging
 
 import httpx
@@ -23,6 +24,8 @@ GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes"
 @router.get("/search")
 async def search_books(
     query: str = Query(..., description="Search query for books"),
+    page: int = Query(1, ge=1, description="Page number for results"),
+    page_size: int = Query(10, ge=1, le=40, description="Results per page (max 40)"),
     books_col=Depends(get_books_collection),
     current_user: dict = Depends(get_current_user),
 ):
@@ -36,10 +39,12 @@ async def search_books(
             status_code=500, detail="Google Books API key not configured"
         )
 
+    start_index = (page - 1) * page_size
     params = {
         "q": query,
         "key": settings.GOOGLE_BOOKS_API_KEY,
-        "maxResults": 10,
+        "maxResults": page_size,
+        "startIndex": start_index,
     }
 
     async with httpx.AsyncClient() as client:
@@ -119,7 +124,20 @@ async def search_books(
         }
         books.append(response_book_data)
 
-    return {"totalItems": data.get("totalItems", 0), "books": books, "query": query}
+    total_items = data.get("totalItems", 0) or 0
+    total_pages = math.ceil(total_items / page_size) if total_items else 0
+    has_more = page < total_pages
+
+    return {
+        "totalItems": total_items,
+        "books": books,
+        "query": query,
+        "page": page,
+        "pageSize": page_size,
+        "totalPages": total_pages,
+        "hasMore": has_more,
+        "nextPage": page + 1 if has_more else None,
+    }
 
 
 # Add book to user's library
