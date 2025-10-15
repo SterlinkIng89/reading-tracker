@@ -191,16 +191,16 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
   if (!open) return null;
 
   return ReactDOM.createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-start justify-center z-50 p-6">
+    <div className="fixed inset-0 bg-bg-base/50 flex items-start justify-center z-50 p-6">
       <div
         ref={modalRef}
-        className="bg-gray-900 rounded-lg w-full max-w-4xl mx-auto mt-12 overflow-hidden"
+        className="bg-surface-medium rounded-lg w-full max-w-4xl mx-auto mt-12 overflow-hidden"
       >
-        <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-          <h3 className="text-xl font-semibold text-white">
+        <div className="p-4 border-b border-border-strong flex justify-between items-center">
+          <h3 className="text-xl font-semibold text-highlight">
             Search and add books
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} className="text-secondary hover:text-highlight focus:outline-none focus:ring-2 focus:ring-accent/60 rounded">
             Close
           </button>
         </div>
@@ -209,7 +209,7 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full p-3 rounded bg-gray-800 text-white border border-gray-700"
+            className="w-full p-3 rounded bg-input-bg text-primary border border-input-border placeholder-input-placeholder focus:outline-none focus:ring-1 focus:ring-accent/60 focus:border-input-focus-border transition-shadow duration-200"
             placeholder="Search by title or author..."
             autoFocus
           />
@@ -218,7 +218,7 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
             <div
               ref={resultsRef}
               id="search-results"
-              className="max-h-[70vh] md:max-h-[70vh] overflow-auto p-2 bg-gray-900 rounded"
+              className="max-h-[70vh] md:max-h-[70vh] overflow-auto p-2 bg-surface-medium rounded"
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Loading Skeleton  */}
@@ -226,16 +226,16 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
                   [1, 2, 3, 4].map((i) => (
                     <div
                       key={i}
-                      className="bg-gray-800 rounded overflow-hidden animate-pulse p-2 flex gap-3"
+                      className="bg-surface-low rounded overflow-hidden animate-pulse p-2 flex gap-3"
                     >
-                      <div className="w-[130px] h-[200px] bg-gray-700 flex-shrink-0 rounded" />
+                      <div className="w-[130px] h-[200px] bg-surface-medium flex-shrink-0 rounded" />
                       <div className="flex-1">
-                        <div className="h-5 bg-gray-700 rounded w-3/4 mb-3" />
-                        <div className="h-4 bg-gray-700 rounded w-1/2 mb-4" />
+                        <div className="h-5 bg-surface-medium rounded w-3/4 mb-3" />
+                        <div className="h-4 bg-surface-medium rounded w-1/2 mb-4" />
                         <div className="space-y-2">
-                          <div className="h-3 bg-gray-700 rounded w-full" />
-                          <div className="h-3 bg-gray-700 rounded w-5/6" />
-                          <div className="h-3 bg-gray-700 rounded w-2/3" />
+                          <div className="h-3 bg-surface-medium rounded w-full" />
+                          <div className="h-3 bg-surface-medium rounded w-5/6" />
+                          <div className="h-3 bg-surface-medium rounded w-2/3" />
                         </div>
                       </div>
                     </div>
@@ -255,14 +255,14 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
                   results.map((it, idx) => (
                     <div
                       key={idx}
-                      className={`relative bg-gray-800 rounded overflow-hidden shadow-sm hover:shadow-lg transition-transform duration-200 ease-out cursor-pointer p-3 ${
-                        selected === it ? "ring-2 ring-indigo-500" : ""
+                      className={`relative bg-surface-medium rounded overflow-hidden shadow-sm hover:shadow-lg transition-transform duration-200 ease-out cursor-pointer p-3 ${
+                        selected === it ? "ring-2 ring-accent-base" : ""
                       }`}
                       onClick={() => setSelected(it)}
                       tabIndex={0}
                     >
                       <div className="flex gap-4">
-                        <div className="w-[130px] h-[200px] bg-gray-700 flex-shrink-0 rounded overflow-hidden">
+                        <div className="w-[130px] h-[200px] bg-surface-low flex-shrink-0 rounded overflow-hidden">
                           {it.thumbnail ? (
                             <img
                               src={it.thumbnail}
@@ -272,7 +272,7 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
                             />
                           ) : (
                             <div
-                              className="w-full h-full flex flex-col items-center justify-center text-red-400 bg-red-900/10 border border-red-700 rounded"
+                              className="w-full h-full flex flex-col items-center justify-center text-secondary bg-surface-low border border-border-default rounded"
                               role="img"
                               aria-label="No cover available"
                               title="No cover available"
@@ -308,19 +308,17 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
                                 />
                                 <circle cx="18" cy="6" r="2.2" fill="#fecaca" />
                               </svg>
-                              <div className="text-xs text-red-300 mt-2">
-                                No cover
-                              </div>
+                                <div className="text-xs text-secondary mt-2">No cover</div>
                             </div>
                           )}
                         </div>
 
                         <div className="flex-1 flex flex-col">
                           <div>
-                            <div className="font-semibold text-base text-white">
+                            <div className="font-semibold text-base text-highlight">
                               {escapeHtml(it.title || "Untitled")}
                             </div>
-                            <div className="text-sm text-gray-400">
+                            <div className="text-sm text-secondary">
                               {escapeHtml(
                                 (it.authors || []).join(", ") ||
                                   "Unknown author"
@@ -328,7 +326,7 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
                             </div>
                           </div>
 
-                          <div className="text-xs text-gray-300 mt-3 line-clamp-4 flex-1">
+                          <div className="text-xs text-secondary mt-3 line-clamp-4 flex-1">
                             {escapeHtml(
                               it.description || "No description available"
                             )}
@@ -340,19 +338,13 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
               </div>
 
               {loadingMore && (
-                <div
-                  className="flex items-center justify-center gap-3 py-3"
-                  role="status"
-                  aria-live="polite"
-                >
-                  <span className="loader"></span>
+                <div className="flex items-center justify-center gap-3 py-3" role="status" aria-live="polite">
+                  <span className="loader" />
                 </div>
               )}
 
               {!hasMore && results.length > 0 && (
-                <div className="text-sm text-gray-400 text-center py-3">
-                  No more results
-                </div>
+                <div className="text-sm text-secondary text-center py-3">No more results</div>
               )}
 
               <div ref={sentinelRef} />
@@ -360,11 +352,11 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
           </div>
         </div>
 
-        <div className="p-4 border-t border-gray-700 flex justify-end gap-2">
+        <div className="p-4 border-t border-border-strong flex justify-end gap-2">
           <button
             onClick={handleAddSelected}
             disabled={!selected || busy}
-            className="bg-indigo-600 disabled:opacity-50 text-white px-4 py-2 rounded"
+            className="bg-accent-base disabled:opacity-50 text-highlight px-4 py-2 rounded hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-accent/60"
           >
             {busy ? "Adding..." : "Add selected"}
           </button>
