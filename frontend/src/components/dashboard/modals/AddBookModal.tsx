@@ -200,7 +200,10 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
           <h3 className="text-xl font-semibold text-highlight">
             Search and add books
           </h3>
-          <button onClick={onClose} className="text-secondary hover:text-highlight focus:outline-none focus:ring-2 focus:ring-accent/60 rounded">
+          <button
+            onClick={onClose}
+            className="text-secondary hover:text-highlight focus:outline-none focus:ring-2 focus:ring-accent/60 rounded"
+          >
             Close
           </button>
         </div>
@@ -255,8 +258,8 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
                   results.map((it, idx) => (
                     <div
                       key={idx}
-                      className={`relative bg-surface-medium rounded overflow-hidden shadow-sm hover:shadow-lg transition-transform duration-200 ease-out cursor-pointer p-3 ${
-                        selected === it ? "ring-2 ring-accent-base" : ""
+                      className={`relative bg-surface-high rounded overflow-hidden shadow-sm hover:shadow-lg transition-transform duration-200 ease-out cursor-pointer p-3 ${
+                        selected === it ? "ring-2 ring-accent-light" : ""
                       }`}
                       onClick={() => setSelected(it)}
                       tabIndex={0}
@@ -308,7 +311,9 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
                                 />
                                 <circle cx="18" cy="6" r="2.2" fill="#fecaca" />
                               </svg>
-                                <div className="text-xs text-secondary mt-2">No cover</div>
+                              <div className="text-xs text-secondary mt-2">
+                                No cover
+                              </div>
                             </div>
                           )}
                         </div>
@@ -338,13 +343,19 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
               </div>
 
               {loadingMore && (
-                <div className="flex items-center justify-center gap-3 py-3" role="status" aria-live="polite">
+                <div
+                  className="flex items-center justify-center gap-3 py-3"
+                  role="status"
+                  aria-live="polite"
+                >
                   <span className="loader" />
                 </div>
               )}
 
               {!hasMore && results.length > 0 && (
-                <div className="text-sm text-secondary text-center py-3">No more results</div>
+                <div className="text-sm text-secondary text-center py-3">
+                  No more results
+                </div>
               )}
 
               <div ref={sentinelRef} />
