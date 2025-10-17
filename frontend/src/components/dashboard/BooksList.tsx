@@ -91,7 +91,6 @@ const BooksList: React.FC = () => {
   const closeAddModal = () => setShowAddModal(false);
 
   if (loading) {
-
     return (
       <div className="col-span-full py-6">
         <div className="flex flex-wrap gap-5 gap-y-7">
@@ -113,7 +112,9 @@ const BooksList: React.FC = () => {
     return (
       <div className="col-span-full py-6">
         <div className="mx-auto max-w-xl bg-surface-medium border border-border-default rounded-lg p-4 text-center">
-          <div className="text-sm text-danger font-semibold mb-2">Failed to load books</div>
+          <div className="text-sm text-danger font-semibold mb-2">
+            Failed to load books
+          </div>
           <div className="text-xs text-secondary mb-4">{error}</div>
           <div className="flex items-center justify-center gap-2">
             <button
@@ -133,8 +134,6 @@ const BooksList: React.FC = () => {
       </div>
     );
   }
-
-  console.log(books);
 
   return (
     <>
