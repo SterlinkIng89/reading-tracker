@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import BookCard from "./BookCard";
 import AddBookModal from "./modals/AddBookModal";
 import { authFetch } from "../../../public/auth/auth";
@@ -54,6 +54,12 @@ const BooksList: React.FC = () => {
     };
   }, []);
 
+  // listen for external sort changes (dispatched from a parent toolbar)
+  useEffect(() => {
+    // previously we listened for external sort events; header is internal now
+    return () => {};
+  }, []);
+
   const loadUserBooks = async () => {
     try {
       setLoading(true);
@@ -89,6 +95,41 @@ const BooksList: React.FC = () => {
   const [showAddModal, setShowAddModal] = React.useState(false);
   const openAddModal = () => setShowAddModal(true);
   const closeAddModal = () => setShowAddModal(false);
+
+  // sorting state: alphabetical and progress
+  const [sortMode, setSortMode] = useState<
+    "alpha-asc" | "alpha-desc" | "progress-desc" | "progress-asc"
+  >("alpha-asc");
+
+  const sortedBooks = useMemo(() => {
+    const copy = [...books];
+    switch (sortMode) {
+      case "alpha-asc":
+        return copy.sort((a, b) =>
+          (a.title || "").localeCompare(b.title || "")
+        );
+      case "alpha-desc":
+        return copy.sort((a, b) =>
+          (b.title || "").localeCompare(a.title || "")
+        );
+      case "progress-desc":
+        return copy.sort((a, b) => {
+          const pa = a.progress_percentage ?? 0;
+          const pb = b.progress_percentage ?? 0;
+          if (pb !== pa) return pb - pa;
+          return (a.title || "").localeCompare(b.title || "");
+        });
+      case "progress-asc":
+        return copy.sort((a, b) => {
+          const pa = a.progress_percentage ?? 0;
+          const pb = b.progress_percentage ?? 0;
+          if (pa !== pb) return pa - pb;
+          return (a.title || "").localeCompare(b.title || "");
+        });
+      default:
+        return copy;
+    }
+  }, [books, sortMode]);
 
   if (loading) {
     return (
@@ -137,12 +178,34 @@ const BooksList: React.FC = () => {
 
   return (
     <>
+      <div className="mb-4">
+        <div className="max-w-4xl w-full flex items-baseline gap-4">
+          <h3 className="text-2xl font-bold text-white leading-tight">
+            My collection
+          </h3>
+
+          <div>
+            <select
+              id="sort-select"
+              value={sortMode}
+              onChange={(e) => setSortMode(e.target.value as any)}
+              className="text-sm bg-input-bg border border-input-border text-primary px-3 py-1 h-8 rounded focus:outline-none focus:ring-1 focus:ring-accent/60"
+            >
+              <option value="alpha-asc">Alphabetical (A → Z)</option>
+              <option value="alpha-desc">Alphabetical (Z → A)</option>
+              <option value="progress-desc">Progress (High → Low)</option>
+              <option value="progress-asc">Progress (Low → High)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-wrap gap-5 gap-y-7">
         <div key="add-new" className="flex-shrink-0">
           <BookCard isNewBook onAdd={openAddModal} />
         </div>
 
-        {books.map((book) => (
+        {sortedBooks.map((book) => (
           <div
             key={book.book_id}
             className="flex-shrink-0"
