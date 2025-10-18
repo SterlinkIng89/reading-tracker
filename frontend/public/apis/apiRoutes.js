@@ -22,6 +22,8 @@ const apiRoutes = {
       getBook: `${API_BASE}/books/user/library/book`,
       add: `${API_BASE}/books/user/library/add`,
       remove: `${API_BASE}/books/user/library/remove`,
+      modify: `${API_BASE}/books/user/library/book/modify`,
+      modifyComplete: `${API_BASE}/books/user/library/book/modifyComplete`,
     },
     logs: {
       get: `${API_BASE}/books/user/logs`,

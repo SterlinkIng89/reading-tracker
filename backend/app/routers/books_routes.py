@@ -344,6 +344,96 @@ async def get_user_library_book(
         )
 
 
+@router.post("/user/library/book/modify")
+async def modify_library_book(
+    book_data: dict = Body(...),
+    books_col=Depends(get_books_collection),
+    current_user: dict = Depends(get_current_user),
+):
+    print("book_data", book_data)
+    try:
+        # Get user book
+        book = await books_col.find_one({"google_id": book_data["book_google_id"]})
+
+        if not book:
+            raise HTTPException(
+                status_code=404, detail="Book not found in user's library"
+            )
+
+        # Update page count
+        try:
+            page_count = int(book_data.get("total_pages", book.get("page_count", 0)))
+        except Exception:
+            page_count = book.get("page_count", 0)
+
+        await books_col.update_one(
+            {"google_id": book_data["book_google_id"]},
+            {"$set": {"page_count": page_count}},
+        )
+
+        return {
+            "message": "Book page count updated successfully",
+            "page_count": page_count,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating book: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error logging reading: {str(e)}")
+
+
+@router.post("/user/library/book/modifyComplete")
+async def modify_user_library_mark_complete(
+    payload: dict = Body(...),
+    user_books_col=Depends(get_user_books_collection),
+    books_col=Depends(get_books_collection),
+    current_user: dict = Depends(get_current_user),
+):
+    """Mark a user's book as completed. Payload: { "book_id": "<google_id>" }
+    This will set the user's current_page to the canonical book.page_count and status to 'completed'.
+    """
+    try:
+        book_id = payload.get("book_id") or payload.get("book_google_id")
+
+        if not book_id:
+            raise HTTPException(status_code=400, detail="book_id is required")
+
+        # Ensure canonical book exists
+        book = await books_col.find_one({"google_id": book_id})
+        if not book:
+            raise HTTPException(status_code=404, detail="Book not found")
+
+        # Ensure user has this book in their library
+        user_book = await user_books_col.find_one(
+            {"user_id": ObjectId(current_user["id"]), "book_id": book_id}
+        )
+        if not user_book:
+            raise HTTPException(status_code=404, detail="Book not found in user's library")
+
+        page_count = int(book.get("page_count", 0) or 0)
+        update_fields = {
+            "current_page": page_count,
+            "status": "completed",
+            "last_read_date": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
+        }
+
+        await user_books_col.update_one(
+            {"user_id": ObjectId(current_user["id"]), "book_id": book_id},
+            {"$set": update_fields},
+        )
+
+        # Optionally, return the updated fields
+        return {"message": "User library entry marked complete", "updated": update_fields}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error marking user book complete: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error modifying library entry: {str(e)}")
+
+
 # Log reading of a book
 @router.post("/user/log/add")
 async def add_log_reading(

@@ -149,12 +149,24 @@ export default function BookEditModal({ open, onClose, book }: Props) {
     if (!Number.isInteger(t) || t < 0) return;
     setBusy(true);
     try {
-      // Note: This function seems incomplete in the original code
-      // You might need to implement the actual API call to update total pages
-      window.dispatchEvent(new CustomEvent("bookUpdated"));
-
-      // Refresh data
-      await loadFullBookData();
+      console.log(book);
+      // Call API to modify the book total pages
+      await authFetch(apiRoutes.books.library.modify, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          book_google_id: book?.book_id?.toString() ?? "",
+          book_id: book?._id?.toString() ?? "",
+          total_pages: t,
+        }),
+      }).then(async (res) => {
+        if (!res.ok) throw new Error("Failed to update book total");
+        // notify other parts of the app
+        window.dispatchEvent(new CustomEvent("bookUpdated"));
+        // Refresh data after update
+        await loadFullBookData();
+        await loadUserLogs();
+      });
     } catch (err) {
       console.error("Update total pages error", err);
       alert("Could not update total pages. Check console.");
