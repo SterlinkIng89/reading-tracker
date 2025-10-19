@@ -16,6 +16,7 @@ interface Props {
 
 export default function BookEditModal({ open, onClose, book }: Props) {
   const handleCloseClick = () => {
+    window.dispatchEvent(new CustomEvent("bookUpdated"));
     onClose();
   };
   const [addPages, setAddPages] = useState<number>(1);
@@ -54,21 +55,7 @@ export default function BookEditModal({ open, onClose, book }: Props) {
       setLogDate(new Date().toISOString().split("T")[0]);
       setLogValue(1);
     }
-  }, [open, book?.book_id]); // Changed dependency to be more specific
-
-  useEffect(() => {
-    const handleBookUpdate = () => {
-      if (open && book?.book_id) {
-        loadFullBookData();
-        loadUserLogs();
-      }
-    };
-
-    if (open) {
-      window.addEventListener("bookUpdated", handleBookUpdate);
-      return () => window.removeEventListener("bookUpdated", handleBookUpdate);
-    }
-  }, [open, book?.book_id]); // Simplified dependencies
+  }, [open, book?.book_id]);
 
   useEffect(() => {
     if (!open) return;
@@ -128,14 +115,10 @@ export default function BookEditModal({ open, onClose, book }: Props) {
         }
       );
 
-      // Refresh data after adding log
       await loadFullBookData();
       await loadUserLogs();
-      window.dispatchEvent(new CustomEvent("logAdded"));
 
-      // Reset form
       setLogValue(1);
-      setLogDate(new Date().toISOString().split("T")[0]);
     } catch (err) {
       console.error("Add pages error", err);
       alert("Could not add pages. Check console.");
@@ -161,9 +144,7 @@ export default function BookEditModal({ open, onClose, book }: Props) {
         }),
       }).then(async (res) => {
         if (!res.ok) throw new Error("Failed to update book total");
-        // notify other parts of the app
-        window.dispatchEvent(new CustomEvent("bookUpdated"));
-        // Refresh data after update
+
         await loadFullBookData();
         await loadUserLogs();
       });

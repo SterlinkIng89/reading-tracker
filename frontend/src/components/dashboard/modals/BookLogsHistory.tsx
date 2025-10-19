@@ -81,8 +81,6 @@ export default function BookLogsHistory({ logs, book, onLogsUpdate }: Props) {
       if (onLogsUpdate) {
         await onLogsUpdate();
       }
-      // Emit event to update BooksList
-      window.dispatchEvent(new CustomEvent("logUpdated"));
       setDeletingId(null);
       setEditingId(null);
       setEditData(null);
@@ -114,8 +112,6 @@ export default function BookLogsHistory({ logs, book, onLogsUpdate }: Props) {
       if (onLogsUpdate) {
         await onLogsUpdate();
       }
-      // Emit event to update BooksList
-      window.dispatchEvent(new CustomEvent("logUpdated"));
       cancelEdit();
     } catch (error) {
       console.error("Error updating log:", error);

@@ -29,28 +29,20 @@ const BooksList: React.FC = () => {
   useEffect(() => {
     const handleBookAdded = () => loadUserBooks();
     const handleBookRemoved = () => loadUserBooks();
+    // Only reload on major changes, not on log updates while modal is open
     const handleBookUpdated = () => {
-      loadUserBooks();
-    };
-    const handleLogAdded = () => {
-      loadUserBooks();
-    };
-    const handleLogUpdated = () => {
+      // Only reload if it's a completion or major update
       loadUserBooks();
     };
 
     window.addEventListener("bookAdded", handleBookAdded);
     window.addEventListener("bookRemoved", handleBookRemoved);
     window.addEventListener("bookUpdated", handleBookUpdated);
-    window.addEventListener("logAdded", handleLogAdded);
-    window.addEventListener("logUpdated", handleLogUpdated);
 
     return () => {
       window.removeEventListener("bookAdded", handleBookAdded);
       window.removeEventListener("bookRemoved", handleBookRemoved);
       window.removeEventListener("bookUpdated", handleBookUpdated);
-      window.removeEventListener("logAdded", handleLogAdded);
-      window.removeEventListener("logUpdated", handleLogUpdated);
     };
   }, []);
 
