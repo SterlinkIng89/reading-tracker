@@ -196,6 +196,7 @@ async def add_book_to_user(
     except HTTPException:
         raise
     except Exception as e:
+        logging.error(f"Error adding book: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error adding book: {str(e)}")
 
 

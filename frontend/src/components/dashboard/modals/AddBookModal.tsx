@@ -143,10 +143,10 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
         typeof json.hasMore === "boolean"
           ? json.hasMore
           : json.nextPage
-          ? true
-          : typeof json.totalPages === "number"
-          ? p < json.totalPages
-          : books.length > 0;
+            ? true
+            : typeof json.totalPages === "number"
+              ? p < json.totalPages
+              : books.length > 0;
       setHasMore(apiHasMore);
       setPage(p);
     } catch (err) {
@@ -177,12 +177,19 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(selected),
       });
-      if (!res.ok) throw new Error("Add failed");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Add failed");
+      }
       window.dispatchEvent(new CustomEvent("bookAdded"));
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Add book error", err);
-      alert("Could not add the book. Check the console.");
+      if (err.message === "Book already in user's library") {
+        alert("This book is already in your library.");
+      } else {
+        alert(`Could not add the book: ${err.message}`);
+      }
     } finally {
       setBusy(false);
     }
@@ -258,9 +265,8 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
                   results.map((it, idx) => (
                     <div
                       key={idx}
-                      className={`relative bg-surface-high rounded overflow-hidden shadow-sm hover:shadow-lg transition-transform duration-200 ease-out cursor-pointer p-3 ${
-                        selected === it ? "ring-2 ring-accent-light" : ""
-                      }`}
+                      className={`relative bg-surface-high rounded overflow-hidden shadow-sm hover:shadow-lg transition-transform duration-200 ease-out cursor-pointer p-3 ${selected === it ? "ring-2 ring-accent-light" : ""
+                        }`}
                       onClick={() => setSelected(it)}
                       tabIndex={0}
                     >
@@ -326,7 +332,7 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
                             <div className="text-sm text-secondary">
                               {escapeHtml(
                                 (it.authors || []).join(", ") ||
-                                  "Unknown author"
+                                "Unknown author"
                               )}
                             </div>
                           </div>
