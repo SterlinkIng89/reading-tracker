@@ -49,7 +49,7 @@ const BooksList: React.FC = () => {
   // listen for external sort changes (dispatched from a parent toolbar)
   useEffect(() => {
     // previously we listened for external sort events; header is internal now
-    return () => {};
+    return () => { };
   }, []);
 
   const loadUserBooks = async () => {
@@ -193,14 +193,14 @@ const BooksList: React.FC = () => {
       </div>
 
       <div className="flex flex-wrap gap-5 gap-y-7">
-        <div key="add-new" className="flex-shrink-0">
+        <div key="add-new" className="flex-shrink-0 w-[150px] h-[230px]">
           <BookCard isNewBook onAdd={openAddModal} />
         </div>
 
         {sortedBooks.map((book) => (
           <div
             key={book.book_id}
-            className="flex-shrink-0"
+            className="flex-shrink-0 w-[150px] h-[230px]"
             onClick={() => handleBookClick(book)}
           >
             <BookCard book={book} />

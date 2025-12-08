@@ -52,9 +52,8 @@ const BookCard: React.FC<BookCardProps> = ({
   return (
     <div
       {...(bookId ? { "data-book-id": bookId } : {})}
-      className={`book-card flex flex-col w-[150px] h-[230px] overflow-visible rounded-md shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer ${
-        isEditOpen ? "scale-105" : ""
-      }`}
+      className={`book-card flex-shrink-0 flex flex-col w-[150px] min-w-[150px] max-w-[150px] h-[230px] min-h-[230px] max-h-[230px] overflow-visible rounded-md shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer ${isEditOpen ? "scale-105" : ""
+        }`}
     >
       {isNewBook ? (
         <button
@@ -96,7 +95,7 @@ const BookCard: React.FC<BookCardProps> = ({
                 <img
                   src={coverUrl}
                   alt={`Cover of ${title}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full max-w-[150px] max-h-[230px] object-cover"
                 />
               </div>
             ) : (
