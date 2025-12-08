@@ -3,33 +3,40 @@
 ---
 
 <header
-  class="fixed inset-x-0 top-0 bg-header border-b-border-strong border-b-2 z-50"
+  class="fixed inset-x-0 top-0 bg-header/80 backdrop-blur-md border-b border-white/10 z-50 transition-all duration-300"
 >
   <div
-    class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative"
+    class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between"
   >
-    <div class="flex items-center space-x-8">
+    <div class="flex items-center gap-8">
       <a
         href="/"
-        class="flex items-center space-x-2 text-xl font-bold text-primary hover:text-primary-hover transition-colors"
+        class="group flex items-center gap-3 text-xl font-bold text-primary hover:text-white transition-colors"
       >
-        <svg
-          class="w-6 h-6 flex-shrink-0"
-          fill="currentColor"
-          viewBox="0 0 20 20"
+        <div
+          class="w-8 h-8 rounded-lg bg-accent-base/20 flex items-center justify-center group-hover:bg-accent-base/30 transition-colors"
         >
-          <path
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          <svg
+            class="w-5 h-5 text-accent-light"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-          </path>
-        </svg>
-        <span class="leading-tight">Reading Tracker</span>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+            ></path>
+          </svg>
+        </div>
+        <span class="tracking-tight font-display">Reading Tracker</span>
       </a>
 
-      <nav class="hidden md:flex space-x-6" aria-label="Primary">
+      <nav class="hidden md:flex items-center gap-6" aria-label="Primary">
         <a
           href="/dashboard"
-          class="text-base font-medium text-secondary hover:text-secondary-hover transition-colors duration-200 leading-tight"
+          class="text-sm font-medium text-secondary hover:text-white transition-colors duration-200"
           >Dashboard</a
         >
       </nav>
@@ -38,7 +45,7 @@
     <!-- Mobile menu button -->
     <button
       id="mobile-menu-button"
-      class="md:hidden p-2 rounded-md text-secondary transition-colors"
+      class="md:hidden p-2 rounded-lg text-secondary hover:bg-white/5 transition-colors"
     >
       <svg
         class="w-6 h-6"
@@ -54,12 +61,13 @@
       </svg>
     </button>
 
-    <div id="header-actions" class="hidden md:flex items-center gap-6">
+    <div id="header-actions" class="hidden md:flex items-center gap-4">
       <slot name="header-actions">
         <a
           id="signin-link"
           href="/signin"
-          class="text-sm font-medium text-secondary">Sign in</a
+          class="text-sm font-medium text-secondary hover:text-white transition-colors"
+          >Sign in</a
         >
       </slot>
     </div>
