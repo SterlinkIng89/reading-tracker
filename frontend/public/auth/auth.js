@@ -63,11 +63,9 @@ export async function authFetch(input, init = {}) {
   try {
     res = await fetch(input, init);
   } catch (err) {
-    // network error or CORS
     throw err;
   }
   if (res.status !== 401) return res;
-  // If the request itself was the refresh endpoint, do not try to refresh again
   try {
     const url = typeof input === "string" ? input : input.url;
     if (url && url.includes("/auth/refresh")) {
