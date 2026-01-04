@@ -10,6 +10,7 @@ from ..services.auth_service import (
     get_password_hash,
     decode_token,
 )
+
 from ..database.connection import get_users_collection, get_current_user
 from ..settings import settings
 
