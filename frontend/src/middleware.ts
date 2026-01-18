@@ -164,7 +164,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const tokenExpired = accessToken ? isTokenExpired(accessToken) : true;
 
     if (accessToken && !tokenExpired) {
-      debugLog("✅ Access token valid - NO refresh");
+      debugLog("Access token valid - NO refresh");
       const newRequest = createAuthorizedRequest(request, accessToken);
 
       if (isPublic) {
@@ -177,7 +177,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
 
     // Token expired or missing, attempt refresh
-    debugLog("⚠️ Token expired or missing - REFRESH");
+    debugLog("Token expired or missing - REFRESH");
     return await handleRefresh(request, path, isPublic, redirect, next);
   }
 
