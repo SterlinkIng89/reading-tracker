@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -38,3 +39,12 @@ def root():
 app.include_router(auth_routes.router)
 app.include_router(user_routes.router)
 app.include_router(books_routes.router)
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    print(f"Global exception caught: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error"},
+    )
