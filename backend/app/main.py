@@ -4,7 +4,10 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 
 from .routers import auth_routes, user_routes, books_routes
+from .logger import configure_logging, get_logger
 
+configure_logging()
+logger = get_logger(__name__)
 
 app = FastAPI(title="Reading Tracker API")
 
@@ -43,7 +46,7 @@ app.include_router(books_routes.router)
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    print(f"Global exception caught: {exc}")
+    logger.error(f"Global exception caught: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal Server Error"},

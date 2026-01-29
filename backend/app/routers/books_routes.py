@@ -6,6 +6,10 @@ import math
 import logging
 
 import httpx
+from app.logger import get_logger
+
+logger = get_logger(__name__)
+
 from app.settings import settings
 from ..database.connection import (
     get_current_user,
@@ -33,7 +37,7 @@ async def search_books(
     Search for books using Google Books API.
     Example: /books/search?q=harry+potter
     """
-    print("searchQuery", query)
+    logger.info(f"searchQuery: {query}")
     if not settings.GOOGLE_BOOKS_API_KEY:
         raise HTTPException(
             status_code=500, detail="Google Books API key not configured"
@@ -189,7 +193,7 @@ async def add_book_to_user(
             "updated_at": datetime.now(timezone.utc),
         }
 
-        print("inserting book doc", book_doc)
+        logger.info(f"inserting book doc: {book_doc}")
 
         result = await user_books_col.insert_one(book_doc)
         return {"message": "Book added to library", "book_id": str(result.inserted_id)}
@@ -214,8 +218,8 @@ async def remove_book_from_user(
         else:
             book_id = str(payload)
 
-        print(book_id)
-        print(current_user["id"])
+        logger.info(f"book_id: {book_id}")
+        logger.info(f"user_id: {current_user['id']}")
         find = await user_books_col.find(
             {
                 "user_id": ObjectId(current_user["id"]),
@@ -223,7 +227,7 @@ async def remove_book_from_user(
             }
         ).to_list(None)
 
-        print(find)
+        logger.info(f"found book: {find}")
 
         await user_books_col.delete_one(
             {
@@ -231,7 +235,7 @@ async def remove_book_from_user(
                 "book_id": book_id,
             }
         )
-        print("Book Removed from Library")
+        logger.info("Book Removed from Library")
         return {"message": "Book removed from library"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error removing book: {str(e)}")
@@ -351,7 +355,7 @@ async def modify_library_book(
     books_col=Depends(get_books_collection),
     current_user: dict = Depends(get_current_user),
 ):
-    print("book_data", book_data)
+    logger.info(f"book_data: {book_data}")
     try:
         # Get user book
         book = await books_col.find_one({"google_id": book_data["book_google_id"]})
@@ -410,7 +414,9 @@ async def modify_user_library_mark_complete(
             {"user_id": ObjectId(current_user["id"]), "book_id": book_id}
         )
         if not user_book:
-            raise HTTPException(status_code=404, detail="Book not found in user's library")
+            raise HTTPException(
+                status_code=404, detail="Book not found in user's library"
+            )
 
         page_count = int(book.get("page_count", 0) or 0)
         update_fields = {
@@ -426,13 +432,18 @@ async def modify_user_library_mark_complete(
         )
 
         # Optionally, return the updated fields
-        return {"message": "User library entry marked complete", "updated": update_fields}
+        return {
+            "message": "User library entry marked complete",
+            "updated": update_fields,
+        }
 
     except HTTPException:
         raise
     except Exception as e:
         logging.error(f"Error marking user book complete: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error modifying library entry: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error modifying library entry: {str(e)}"
+        )
 
 
 # Log reading of a book
@@ -636,7 +647,7 @@ async def remove_log_reading(
     user_books_col=Depends(get_user_books_collection),
     current_user: dict = Depends(get_current_user),
 ):
-    print(log_data)
+    logger.info(f"log_data: {log_data}")
     try:
         user_id = ObjectId(current_user["id"])
         log_id = ObjectId(log_data["log_id"])

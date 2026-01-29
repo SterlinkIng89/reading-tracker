@@ -21,6 +21,7 @@ node_modules/
 dist/
 .cache/
 *.log
+backend/logs/
 
 # Astro
 .astro/

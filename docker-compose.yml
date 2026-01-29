@@ -5,6 +5,7 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      - ./backend/logs:/app/logs
     environment:
       - MONGO_URL=mongodb://mongo:27017
       - MONGO_USER=${MONGO_USER}
